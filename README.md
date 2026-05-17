@@ -15,13 +15,11 @@
 | 기능 | 설명 |
 |---|---|
 | 📰 이슈 수집 | 외부 뉴스/이슈 데이터를 주기적으로 수집 |
-| 🧹 데이터 정규화 | Source별 원본 데이터를 내부 표준 포맷으로 변환 |
+| 🧹 데이터 정규화 | Source별 Crawling 데이터 도메인 포맷으로 변환 |
 | 🧠 AI 분석 | 기사 요약, 키워드 추출, 지역명 추출 |
-| 📍 지역 매핑 | 추출된 지역 정보를 서울 행정구역 기준으로 매핑 |
-| 🗺️ 지도 시각화 | 지역별 이슈를 지도 위 Marker/Polygon 형태로 표시 |
+| 📍 지역 매핑 | 추출된 지역 정보를 서울 행정구역 기준으로 매핑 하여 지도 마킹 |
 | 🔎 이슈 조회 | 기사 목록, 상세 내용, 분석 결과 조회 |
-| 💬 댓글 기능 | 사용자 기반 이슈 토론 기능 |
-| 🔄 비동기 처리 | Redis Streams 기반 서비스 간 이벤트 처리 |
+| 🔄 서비스 통신 | Redis Streams 기반 Event Broker 방식 서비스간 통신 구현 |
 
 ---
 
@@ -29,7 +27,7 @@
 
 각 서비스는 독립적인 책임을 가지고 메인 백엔드를 중심으로 Redis Streams 기반 이벤트 통신을 사용합니다.
 
-> 서비스 아키텍쳐 이미지 추가
+![시스템 아키텍처 도식화 이미지](./Docs/Images/서비스_아키텍쳐.png)
 
 ## 서비스별 역할
 
@@ -77,7 +75,7 @@
 DB 설계는 EF Core CodeFirst 방식으로 진행했습니다.
 Crawler와 Analyzer는 DB에 직접 접근하지 않고, Backend Worker가 이벤트를 소비하여 최종 데이터를 저장합니다.
 
-> ERD 이미지 추가 예정
+![시스템 아키텍처 도식화 이미지](./Docs/Images/DB_ERD_v3.png)
 
 ---
 
@@ -105,10 +103,9 @@ flowchart LR
 
 | Phase | 목표 | Status |
 |---|---|---|
-| 📚 Study | 웹 크롤링, React, Leaflet, Redis Streams 등 초기 학습 | ⬜ |
-| 1️⃣ MVP | 서울 지역 대상, 1개 카테고리 크롤링 기반 End-to-End 동작 구현 | ⬜ |
-| 2️⃣ Refactoring | Clean Architecture 적용 범위 재검토 및 Backend 구조 개선 | ⬜ |
-| 3️⃣ Expansion | 서울 지역 N개 카테고리 확장 및 지역 기준 분석 고도화 | ⬜ |
+| 1️⃣ MVP | 서울 지역 대상, 1개 카테고리 크롤링 기반 End-to-End 동작 구현 | in-progress |
+| 2️⃣ Refactoring | Clean Architecture 적용 Backend 구조 개선 | - |
+| 3️⃣ Expansion | 서울 지역 N개 카테고리 확장 및 지역 기준 분석 고도화 | - |
 
 ---
 
@@ -116,13 +113,13 @@ flowchart LR
 
 | Area | Stack |
 |---|---|
-| Backend | ASP.NET Core, C#, EF Core, BackgroundService, Serilog |
+| Backend | C#, ASP.NET Core, EF Core, BackgroundService |
 | Frontend | React, TypeScript, Leaflet |
 | Crawler | Python, Web Crawling |
-| Analyzer | Python, Agent Pipeline 연결, AI 분석, 키워드 추출, 지역 추출 등 |
+| Analyzer | Python, LLM Agent 분석기 Pipeline |
 | Database | PostgreSQL |
-| Messaging | Redis Streams |
-| Infra | Docker, Docker Compose, Nginx |
+| Event Broker | Redis Streams |
+| Infra | Docker, Docker Compose, Nginx, Oracle Cloud(예정) |
 | DevOps | GitHub Actions |
 
 ---
