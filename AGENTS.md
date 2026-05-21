@@ -1,143 +1,163 @@
 # AGENTS.md
 
-## 1. 문서 목적
-이 문서는 G.I.T Monorepo에서 AI Agent가 작업할 때 따라야 할 전역 공통 지침을 정의한다.
-개별 서비스의 세부 구현 규칙은 Backend, Frontend, Crawler, Analyzer 등 서비스별 `AGENTS.md` 또는 Skill 문서에서 관리한다.
-이 문서는 Monorepo 작업 범위, 변경 영향도 판단, 서비스 간 계약 보호, YAGNI 원칙, 변경 보고 방식만 다룬다.
+## 1. Purpose
+
+This document defines the global instructions for AI agents working in the G.I.T monorepo.
+
+Service-specific implementation rules belong in each service-level `AGENTS.md` or Skill document, such as Backend, Frontend, Crawler, or Analyzer instructions.
+
+This global document only covers:
+- monorepo-level work boundaries
+- change impact assessment
+- cross-service contract protection
+- YAGNI principles
+- change reporting rules
 
 ---
 
-## 2. 프로젝트 개요
-G.I.T는 뉴스 및 이슈 데이터를 수집하고, 분석 결과를 지역 정보와 연결하여 지도 기반으로 조회하는 시스템이다.
-주요 구성 요소는 다음과 같다.
+## 2. Project Overview
+
+G.I.T is a system that collects news and issue data, analyzes it, links the results to regional information, and provides map-based visualization.
+
+Main components:
 - Backend: ASP.NET Core API + Worker
 - Frontend: React + Leaflet
-- Crawler: Python 기반 수집 서비스
-- Analyzer: Python 기반 분석 서비스
+- Crawler: Python-based collection service
+- Analyzer: Python-based analysis service
 - Database: PostgreSQL
 - Event Broker: Redis Streams
-- Deployment: Docker Compose 및 배포 설정
+- Deployment: Docker Compose and deployment configuration
 
 ---
 
-## 3. 전역 작업 원칙
+## 3. Global Working Principles
 
-### 3.1 작업 범위 제한
-Agent는 요청받은 범위 안에서만 수정한다. 작업 중 다른 문제가 발견되더라도 사용자 요청 없이 대규모 수정, 구조 변경, 리팩토링을 수행하지 않는다.
-허용되는 변경은 다음으로 제한한다.
-- 요청된 파일 수정
-- 요청된 기능 구현에 직접 필요한 최소 변경
-- 명백한 오타, 깨진 링크, 잘못된 참조 수정
-- 작업 이해에 필요한 최소한의 문서 보완
-주의가 필요한 변경은 반드시 영향 범위를 먼저 판단한다.
-- 디렉토리 구조 변경
-- 서비스 간 계약 변경
-- 공통 라이브러리 신설
-- 사용하지 않는 추상화 추가
-- 기술 스택 교체
-- 전체 코드 스타일 일괄 변경
+### 3.1 Work Scope
 
-### 3.2 Monorepo 기준 작업
-Agent의 기준 위치는 Monorepo Root이다. 단, Root 전체를 자유롭게 수정해도 된다는 의미는 아니다.
-다른 서비스 코드는 다음 목적일 때만 읽는다.
-- 이벤트 계약 확인
-- API 계약 확인
-- 데이터 흐름 확인
-- 의존 관계 파악
-- 변경 영향도 확인
-사용자 요청 없이 다른 서비스 코드를 수정하지 않는다.
+Agents must only modify files and behavior within the requested scope.
 
-### 3.3 계약 변경 보호
-다음 변경은 프로젝트 전체에 영향을 줄 수 있으므로 전역 영향 변경으로 취급한다.
-- API Request / Response 구조 변경
-- Event Message Schema 변경
-- Database Schema 변경
-- Docker Compose 서비스명 변경
-- 환경변수 이름 변경
-- 공통 설정 파일 구조 변경
-- 디렉토리 구조 변경
-- 패키지 또는 프로젝트 참조 구조 변경
-계약 변경이 필요하면 변경 이유, 영향받는 파일과 서비스, 기존 동작과의 호환 여부, 더 작은 변경으로 해결 가능한지 여부를 먼저 정리한다.
+Do not perform broad fixes, structural changes, or refactoring just because related issues are discovered during the task.
+
+Allowed changes are limited to:
+- files explicitly requested by the user
+- minimal changes directly required for the requested feature or fix
+- obvious typo, broken link, or invalid reference fixes
+- minimal documentation updates needed to clarify the current task
+
+Before making any of the following changes, assess the impact and proceed only when explicitly required or approved:
+- directory structure changes
+- cross-service contract changes
+- new shared libraries
+- unused abstractions
+- technology stack changes
+- repository-wide code style rewrites
+
+### 3.2 Monorepo Boundary
+
+The default reference point is the monorepo root.
+
+This does not mean agents may freely modify the entire repository.
+
+Agents may read other services only when needed to understand:
+- event contracts
+- API contracts
+- data flow
+- dependency relationships
+- change impact
+
+Do not modify other services unless the user explicitly requests it or the task directly requires it.
 
 ---
 
-## 4. YAGNI 원칙
-현재 요구사항에서 실제로 필요하지 않은 구조, 기능, 추상화, 확장 포인트를 미리 만들지 않는다.
-금지 예시는 다음과 같다.
-- 아직 사용하지 않는 Interface 생성
-- 구현체가 하나뿐인 Strategy 패턴 도입
-- 당장 필요 없는 공통 모듈 생성
-- 미래 확장만을 이유로 한 Generic 구조 작성
-- 사용하지 않는 Base Class 작성
-- 아직 요구되지 않은 Multi Provider 구조 작성
-- 호출되지 않는 유틸리티 함수 작성
-- 테스트 대상이 불명확한 테스트 골격 생성
-확장 가능성은 이름, 책임 분리, 설정 분리, 외부 계약 명시 수준에서만 반영한다.
-모든 기능을 플러그인 구조로 만들거나, 모든 클래스를 Interface로 감싸거나, 아직 없는 트래픽과 요구사항을 기준으로 구조를 복잡하게 만들지 않는다.
+## 4. YAGNI
+
+Do not introduce structures, features, abstractions, or extension points that are not required by the current task.
+
+Avoid:
+- interfaces with only one implementation
+- Strategy patterns with only one strategy
+- shared modules created before actual reuse exists
+- generic structures justified only by future possibilities
+- unused base classes
+- multi-provider structures before multiple providers exist
+- utility functions that are not called
+- test scaffolding without a clear target
+
+Future extensibility may be reflected through:
+- clear naming
+- responsibility separation
+- configuration boundaries
+- explicit external contracts
+
+Do not make every feature pluggable, wrap every class with an interface, or design around traffic and requirements that do not exist yet.
 
 ---
 
-## 5. 코드 변경 원칙
+## 5. Code Change Rules
 
-### 5.1 기존 구조 존중
-기존 프로젝트 구조와 코드 스타일을 우선 따른다. 명확한 문제가 없는 한 작업 편의를 이유로 구조를 바꾸지 않는다.
+### 5.1 Preserve Existing Structure
 
-### 5.2 작은 단위 변경
-변경은 작고 추적 가능해야 한다.
-- 한 요청에서 하나의 목적을 해결한다.
-- 관련 없는 리팩토링을 섞지 않는다.
-- 변경 이유가 설명 가능한 코드만 추가한다.
-- 삭제가 필요한 경우 영향 범위를 확인한다.
+Follow the existing project structure, naming style, and implementation patterns unless there is a clear reason to change them.
+
+Do not restructure code for agent convenience.
+
+### 5.2 Keep Changes Small and Reviewable
+
+Changes must be small, focused, and traceable.
+
+Rules:
+- solve one purpose per request
+- do not mix unrelated refactoring with feature work
+- only add code whose purpose can be explained
+- check impact before deleting or moving code
+- prefer focused patches over large one-shot rewrites
+
+### 5.3 Before Editing Code
+
+Before modifying code:
+- break the request into small implementation tasks
+- explain the short plan first
+- do not make broad architectural changes unless explicitly requested
+- keep the patch reviewable
+
+### 5.4 After Editing Code
+
+After modifying code:
+- summarize changed files
+- explain important diffs
+- mention any behavior, schema, contract, or configuration changes
+- report skipped validation or tests honestly
+
+### 5.5 Comments Rule
+Write comments in Korean. Use English for specialized IT terms such as class, interface, and design patterns.
+
+---
+
+## 6. Git Rules
+
+Do not run the following commands unless explicitly requested:
+- `git add`
+- `git commit`
+- `git push`
+- `git reset`
+- `git rebase`
+
+The user manages staging, review, and commits manually.
 
 ---
 
-## 6. 금지 사항
-Agent는 사용자 요청 없이 다음 작업을 수행하지 않는다.
-- Monorepo 전체 구조 재편
-- 특정 아키텍처 패턴 강제 도입
-- 공통 라이브러리 선제 생성
-- 사용하지 않는 추상화 추가
-- 서비스 간 계약 변경
-- DB Schema 대규모 변경
-- Event Message Schema 변경
-- Docker Compose 구조 변경
-- 기술 스택 교체
-- 패키지 대규모 업데이트
-- 코드 스타일 전체 일괄 변경
-- 구현되지 않은 기능을 문서에 완료된 것처럼 작성
+## 7. Prohibited Without Explicit Request
 
----
-## 7. 작업 후 보고 형식
-작업 완료 후 변경 결과를 간단히 요약한다.
-```md
-## 작업 요약
-- 변경 파일:
-- 주요 변경:
-- 영향 범위:
-- 확인 필요 사항:
-```
-설계 판단이 포함된 경우 다음을 추가한다.
-```md
-## 설계 판단
-- 선택한 방식:
-- 선택 이유:
-- Trade-off:
-```
-버그 수정인 경우 다음을 추가한다.
-```md
-## 수정 내용
-- 원인:
-- 수정 방식:
-- 재발 방지:
-```
-
----
-## 8. 판단 기준
-판단이 애매하면 다음 기준을 따른다.
-1. 지금 필요한 것만 만든다.
-2. 변경 범위를 줄인다.
-3. 기존 계약을 유지한다.
-4. 실행 가능한 상태를 유지한다.
-5. 나중에 바꿀 수 있는 것은 지금 복잡하게 만들지 않는다.
-6. 문서와 구현을 일치시킨다.
-7. 모르면 추측해서 대규모 변경하지 않는다.
+Agents must not perform the following without explicit user request or clear task necessity:
+- reorganize the monorepo structure
+- force a specific architecture pattern
+- create shared libraries preemptively
+- add unused abstractions
+- change service-to-service contracts
+- perform large DB schema changes
+- change event message schemas
+- restructure Docker Compose configuration
+- replace the technology stack
+- perform large package updates
+- rewrite repository-wide code style
+- document unfinished features as completed
