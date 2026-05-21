@@ -1,141 +1,147 @@
 # AGENTS.md
 
-## 1. Purpose
+## Purpose
 
-This document defines the global instructions for AI agents working in the G.I.T monorepo.
+Global instructions for AI agents working in the G.I.T monorepo.
 
-Service-specific implementation rules belong in each service-level `AGENTS.md` or Skill document, such as Backend, Frontend, Crawler, or Analyzer instructions.
-
-This global document only covers:
-- monorepo-level work boundaries
-- change impact assessment
-- cross-service contract protection
-- YAGNI principles
-- change reporting rules
+Service-specific rules belong in service-level `AGENTS.md` or Skill documents. This file only defines monorepo-wide boundaries, quality expectations, scope control, and reporting rules.
 
 ---
 
-## 2. Project Overview
+## Project Overview
 
-G.I.T is a system that collects news and issue data, analyzes it, links the results to regional information, and provides map-based visualization.
+G.I.T collects news/issue data, analyzes it, links it to regional information, and visualizes it on a map.
 
 Main components:
 - Backend: ASP.NET Core API + Worker
 - Frontend: React + Leaflet
-- Crawler: Python-based collection service
-- Analyzer: Python-based analysis service
+- Crawler: Python
+- Analyzer: Python
 - Database: PostgreSQL
 - Event Broker: Redis Streams
-- Deployment: Docker Compose and deployment configuration
+- Deployment: Docker Compose
 
 ---
 
-## 3. Global Working Principles
+## Core Principles
 
-### 3.1 Work Scope
+### Correctness First
 
-Agents must only modify files and behavior within the requested scope.
+Small changes do not mean preserving incorrect, fragile, or non-standard code.
 
-Do not perform broad fixes, structural changes, or refactoring just because related issues are discovered during the task.
+Prefer:
+- stable framework conventions
+- predictable runtime behavior
+- deployment-safe configuration
+- readable and maintainable implementation
 
-Allowed changes are limited to:
-- files explicitly requested by the user
-- minimal changes directly required for the requested feature or fix
-- obvious typo, broken link, or invalid reference fixes
-- minimal documentation updates needed to clarify the current task
+For infrastructure code such as logging, configuration, dependency injection, hosting, database setup, Docker, Redis, or background workers, verify that the result is not only compilable but also reasonable for normal runtime/deployment behavior.
 
-Before making any of the following changes, assess the impact and proceed only when explicitly required or approved:
-- directory structure changes
-- cross-service contract changes
-- new shared libraries
-- unused abstractions
-- technology stack changes
-- repository-wide code style rewrites
+Do not silently keep unusual or broken patterns only because they already exist.
 
-### 3.2 Monorepo Boundary
+### Practical Architecture
 
-The default reference point is the monorepo root.
+Avoid both over-engineered enterprise patterns and tightly coupled “everything in one place” implementations.
 
-This does not mean agents may freely modify the entire repository.
+Maintain:
+- clear responsibility boundaries
+- reasonable layering
+- separation between infrastructure and business logic
+- maintainable dependency direction
+- explicit external contracts
 
-Agents may read other services only when needed to understand:
-- event contracts
-- API contracts
-- data flow
-- dependency relationships
-- change impact
+Apply Clean Architecture, but avoid obsessive application such as unconditional Use Case separation or mandatory Domain/Entity separation.
 
-Do not modify other services unless the user explicitly requests it or the task directly requires it.
+Use architecture appropriate for the current project phase.
 
----
+### YAGNI
 
-## 4. YAGNI
-
-Do not introduce structures, features, abstractions, or extension points that are not required by the current task.
+Do not introduce structures, abstractions, or extension points that are not required by the current task.
 
 Avoid:
 - interfaces with only one implementation
 - Strategy patterns with only one strategy
-- shared modules created before actual reuse exists
-- generic structures justified only by future possibilities
-- unused base classes
-- multi-provider structures before multiple providers exist
+- premature shared libraries
+- unused base classes or wrappers
+- speculative scalability structures
 - utility functions that are not called
-- test scaffolding without a clear target
 
-Future extensibility may be reflected through:
-- clear naming
-- responsibility separation
-- configuration boundaries
-- explicit external contracts
-
-Do not make every feature pluggable, wrap every class with an interface, or design around traffic and requirements that do not exist yet.
+Future extensibility should be expressed through clear naming, responsibility separation, configuration boundaries, and explicit contracts.
 
 ---
 
-## 5. Code Change Rules
+## Work Scope
 
-### 5.1 Preserve Existing Structure
+Modify only what the request requires.
 
-Follow the existing project structure, naming style, and implementation patterns unless there is a clear reason to change them.
+Allowed changes:
+- files explicitly requested by the user
+- minimal supporting code required for the task
+- obvious typo or invalid reference fixes
+- small documentation updates directly related to the task
 
-Do not restructure code for agent convenience.
+Do not perform broad refactoring, repository-wide cleanup, or structural changes unless explicitly requested or technically necessary.
 
-### 5.2 Keep Changes Small and Reviewable
+Before changing directory structure, cross-service contracts, schemas, technology stack, shared libraries, or infrastructure design, assess impact and proceed only when required.
 
-Changes must be small, focused, and traceable.
+---
 
-Rules:
-- solve one purpose per request
-- do not mix unrelated refactoring with feature work
-- only add code whose purpose can be explained
-- check impact before deleting or moving code
-- prefer focused patches over large one-shot rewrites
+## Monorepo Boundary
 
-### 5.3 Before Editing Code
+The monorepo root is the default reference point.
 
-Before modifying code:
-- break the request into small implementation tasks
-- explain the short plan first
-- do not make broad architectural changes unless explicitly requested
-- keep the patch reviewable
+Agents may read other services to understand API contracts, event contracts, data flow, dependencies, or impact.
 
-### 5.4 After Editing Code
+Do not modify other services unless explicitly requested or technically required.
 
-After modifying code:
+---
+
+## Code Change Rules
+
+Follow existing project structure and naming style unless the current pattern is clearly problematic or the requested task requires correction.
+
+Keep changes:
+- focused
+- traceable
+- reviewable
+- limited to one purpose per request
+
+Avoid unrelated refactoring, one-shot rewrites, and preserving weak patterns blindly.
+
+Before implementation:
+- briefly explain the plan
+- break the task into small steps
+- identify important behavior or configuration changes
+
+After implementation:
 - summarize changed files
 - explain important diffs
-- mention any behavior, schema, contract, or configuration changes
+- mention behavior, schema, contract, or configuration changes
 - report skipped validation or tests honestly
-
-### 5.5 Comments Rule
-Write comments in Korean. Use English for specialized IT terms such as class, interface, and design patterns.
 
 ---
 
-## 6. Git Rules
+## Quality Expectations
 
-Do not run the following commands unless explicitly requested:
+Prefer:
+- standard framework conventions
+- explicit configuration
+- deterministic runtime behavior
+- production-safe defaults
+- readable code over clever code
+
+Avoid:
+- hidden magic behavior
+- ambiguous configuration structures
+- unnecessary global state
+- silent runtime assumptions
+- copy-pasted infrastructure code without validation
+
+---
+
+## Git Rules
+
+Do not run these commands unless explicitly requested:
 - `git add`
 - `git commit`
 - `git push`
@@ -146,18 +152,16 @@ The user manages staging, review, and commits manually.
 
 ---
 
-## 7. Prohibited Without Explicit Request
+## Prohibited Without Explicit Request
 
-Agents must not perform the following without explicit user request or clear task necessity:
+Do not:
 - reorganize the monorepo structure
 - force a specific architecture pattern
-- create shared libraries preemptively
 - add unused abstractions
-- change service-to-service contracts
-- perform large DB schema changes
-- change event message schemas
-- restructure Docker Compose configuration
-- replace the technology stack
-- perform large package updates
+- create premature shared modules
 - rewrite repository-wide code style
+- replace the technology stack
+- perform large package upgrades
+- broadly change service-to-service contracts
+- redesign infrastructure unnecessarily
 - document unfinished features as completed
