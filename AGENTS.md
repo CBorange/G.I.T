@@ -1,167 +1,31 @@
-# AGENTS.md
+## 개요
+GIT 프로젝트는 뉴스/이슈 데이터를 Crawling, AI Analyze하여 지역 정보와 연결하여
+지도에 시각화 하는 GIS 서비스 이다.
 
-## Purpose
-
-Global instructions for AI agents working in the G.I.T monorepo.
-
-Service-specific rules belong in service-level `AGENTS.md` or Skill documents. This file only defines monorepo-wide boundaries, quality expectations, scope control, and reporting rules.
-
----
-
-## Project Overview
-
-G.I.T collects news/issue data, analyzes it, links it to regional information, and visualizes it on a map.
-
-Main components:
+시스템 구성:
 - Backend: ASP.NET Core API + Worker
 - Frontend: React + Leaflet
-- Crawler: Python
-- Analyzer: Python
-- Database: PostgreSQL
-- Event Broker: Redis Streams
-- Deployment: Docker Compose
+- Crawler Service: Python
+- AI Analyzer: Python
+- DataBase: PostgreSQL
+- EventBroker: Redis Streams
+- Infra: Docker Compose
 
----
+## 코드작업 지침
+실용적이고 클린한 아키텍쳐를 추구하되 과하게 일반화된 엔터프라이즈급 설계를 경계하여 작업하라.
+클린 코드, 클린 아키텍쳐를 기본 원칙으로 준수하라.
 
-## Core Principles
+- 명확한 책임 경계를 가지고 설계하라
+ex) Layer 의존성 경계를 지키고 강한 결합을 지양하라.
+- God Object를 설계하지 말고 용도에 따라 적절하게 모듈을 분리하라.
+- YAGNI("You Aren't Gonna Need It") 원칙을 준수하라.
+- 명시적으로 요청되었거나 기술적으로 필요한 경우가 아니면 광범위한 리팩토링 또는 구조적 변경을 수행하지 마라.
+- 각 서비스에서 사용되는 언어와 프레임워크의 최신 표준 개발방법을 적용하라.
 
-### Correctness First
+## Repository 참조 지침
+이 프로젝트는 Mono Repo로 구성되어 있다.
+에이전트는 API 계약, 이벤트 계약, 데이터 흐름, 종속성 또는 영향 분석을 위해 다른 서비스를 읽을 수 있다.
+하지만 명시적으로 요청되었거나 기술적으로 필요한 경우가 아니면 다른 서비스를 참조하는것은 자제하고 특히 명확한 요청이 있지 않으면 다른 서비스를 수정하지 마라.
 
-Small changes do not mean preserving incorrect, fragile, or non-standard code.
-
-Prefer:
-- stable framework conventions
-- predictable runtime behavior
-- deployment-safe configuration
-- readable and maintainable implementation
-
-For infrastructure code such as logging, configuration, dependency injection, hosting, database setup, Docker, Redis, or background workers, verify that the result is not only compilable but also reasonable for normal runtime/deployment behavior.
-
-Do not silently keep unusual or broken patterns only because they already exist.
-
-### Practical Architecture
-
-Avoid both over-engineered enterprise patterns and tightly coupled “everything in one place” implementations.
-
-Maintain:
-- clear responsibility boundaries
-- reasonable layering
-- separation between infrastructure and business logic
-- maintainable dependency direction
-- explicit external contracts
-
-Apply Clean Architecture, but avoid obsessive application such as unconditional Use Case separation or mandatory Domain/Entity separation.
-
-Use architecture appropriate for the current project phase.
-
-### YAGNI
-
-Do not introduce structures, abstractions, or extension points that are not required by the current task.
-
-Avoid:
-- interfaces with only one implementation
-- Strategy patterns with only one strategy
-- premature shared libraries
-- unused base classes or wrappers
-- speculative scalability structures
-- utility functions that are not called
-
-Future extensibility should be expressed through clear naming, responsibility separation, configuration boundaries, and explicit contracts.
-
----
-
-## Work Scope
-
-Modify only what the request requires.
-
-Allowed changes:
-- files explicitly requested by the user
-- minimal supporting code required for the task
-- obvious typo or invalid reference fixes
-- small documentation updates directly related to the task
-
-Do not perform broad refactoring, repository-wide cleanup, or structural changes unless explicitly requested or technically necessary.
-
-Before changing directory structure, cross-service contracts, schemas, technology stack, shared libraries, or infrastructure design, assess impact and proceed only when required.
-
----
-
-## Monorepo Boundary
-
-The monorepo root is the default reference point.
-
-Agents may read other services to understand API contracts, event contracts, data flow, dependencies, or impact.
-
-Do not modify other services unless explicitly requested or technically required.
-
----
-
-## Code Change Rules
-
-Follow existing project structure and naming style unless the current pattern is clearly problematic or the requested task requires correction.
-
-Keep changes:
-- focused
-- traceable
-- reviewable
-- limited to one purpose per request
-
-Avoid unrelated refactoring, one-shot rewrites, and preserving weak patterns blindly.
-
-Before implementation:
-- briefly explain the plan
-- break the task into small steps
-- identify important behavior or configuration changes
-
-After implementation:
-- summarize changed files
-- explain important diffs
-- mention behavior, schema, contract, or configuration changes
-- report skipped validation or tests honestly
-
----
-
-## Quality Expectations
-
-Prefer:
-- standard framework conventions
-- explicit configuration
-- deterministic runtime behavior
-- production-safe defaults
-- readable code over clever code
-
-Avoid:
-- hidden magic behavior
-- ambiguous configuration structures
-- unnecessary global state
-- silent runtime assumptions
-- copy-pasted infrastructure code without validation
-
----
-
-## Git Rules
-
-Do not run these commands unless explicitly requested:
-- `git add`
-- `git commit`
-- `git push`
-- `git reset`
-- `git rebase`
-
-The user manages staging, review, and commits manually.
-
----
-
-## Prohibited Without Explicit Request
-
-Do not:
-- reorganize the monorepo structure
-- force a specific architecture pattern
-- add unused abstractions
-- create premature shared modules
-- rewrite repository-wide code style
-- replace the technology stack
-- perform large package upgrades
-- broadly change service-to-service contracts
-- redesign infrastructure unnecessarily
-- document unfinished features as completed
+## 작업 순서
+- 문제를 작은 Task로 분리하고 단계별 체크리스트를 작성하여 작업하라.
