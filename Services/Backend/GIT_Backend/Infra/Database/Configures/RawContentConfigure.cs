@@ -15,6 +15,9 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
         entity.HasIndex(e => e.SourceUrl)
             .IsUnique();
 
+        entity.HasIndex(e => e.ContentId)
+            .IsUnique();
+
         entity.Property(e => e.Id)
             .ValueGeneratedNever();
 
@@ -27,6 +30,13 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
         entity.Property(e => e.SourceUrl)
             .HasColumnType("text")
             .IsRequired();
+        
+        entity.Property(e => e.ContentId)
+            .HasColumnType("text")
+            .IsRequired();
+
+        entity.Property(e => e.ContentId)
+            .HasMaxLength(50);
 
         entity.Property(e => e.Author)
             .HasMaxLength(100);

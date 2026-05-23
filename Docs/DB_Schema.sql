@@ -182,7 +182,7 @@ CREATE TABLE "source_provider"
   "crawl_url"          text         NOT NULL,
   "is_active"          boolean      NOT NULL DEFAULT TRUE,
   "interval_min"       integer      NOT NULL,
-  "rate_limit_ms"      integer      NOT NULL,
+  "request_delay_ms"   integer      NOT NULL,
   "description"        varchar(200),
   "created_at"         timestamptz  NOT NULL,
   "updated_at"         timestamptz ,
@@ -207,7 +207,7 @@ COMMENT ON COLUMN "source_provider"."is_active" IS '활성화 여부';
 
 COMMENT ON COLUMN "source_provider"."interval_min" IS '크롤링 주기(분)';
 
-COMMENT ON COLUMN "source_provider"."rate_limit_ms" IS '요청 간 대기 시간 (밀리초)';
+COMMENT ON COLUMN "source_provider"."request_delay_ms" IS '요청 간 대기 시간 (밀리초)';
 
 COMMENT ON COLUMN "source_provider"."description" IS '설명';
 

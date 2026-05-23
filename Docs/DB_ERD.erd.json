@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": 0,
-    "scrollLeft": -79.041,
+    "scrollTop": -306,
+    "scrollLeft": -11,
     "zoomLevel": 0.85,
     "show": 511,
     "database": 16,
@@ -151,6 +151,7 @@
           "UvddFJEa4AL1unFOXjvnZ",
           "_qMnu_KJRJS7QTU2b1ucM",
           "b-MPreE-cVd2hhGEZCtTU",
+          "8mZv868ES1NOlp6tQ4rhc",
           "2EREU-ksIEV8gKf5puMQP",
           "2rKJyJB4q2iTNUEODAd62",
           "_8IJHDCqcuCWL2gkg_juD",
@@ -165,6 +166,7 @@
           "_qMnu_KJRJS7QTU2b1ucM",
           "b-MPreE-cVd2hhGEZCtTU",
           "z3Mn2Z-wwOl5KuGo4D7kP",
+          "8mZv868ES1NOlp6tQ4rhc",
           "2EREU-ksIEV8gKf5puMQP",
           "2rKJyJB4q2iTNUEODAd62",
           "_8IJHDCqcuCWL2gkg_juD",
@@ -188,7 +190,7 @@
           "color": "#03A9F4"
         },
         "meta": {
-          "updateAt": 1778686158674,
+          "updateAt": 1779551528406,
           "createAt": 1778509940901
         }
       },
@@ -1983,6 +1985,26 @@
           "updateAt": 1778686191893,
           "createAt": 1778686112637
         }
+      },
+      "8mZv868ES1NOlp6tQ4rhc": {
+        "id": "8mZv868ES1NOlp6tQ4rhc",
+        "tableId": "n4NzzOvwvkpH5blq2p5hr",
+        "name": "content_id",
+        "comment": "소스 고유 ID(기사 ID)",
+        "dataType": "varchar(50)",
+        "default": "",
+        "options": 4,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 114,
+          "widthDataType": 61,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1779551575822,
+          "createAt": 1779551526424
+        }
       }
     },
     "relationshipEntities": {
@@ -2053,7 +2075,7 @@
             "g0VdiUD26HLbkWZltaw8K"
           ],
           "x": 649.512,
-          "y": 953.2368,
+          "y": 971.2368,
           "direction": 2
         },
         "end": {
@@ -2202,7 +2224,7 @@
             "_qMnu_KJRJS7QTU2b1ucM"
           ],
           "x": 649.512,
-          "y": 793.2368,
+          "y": 799.2368,
           "direction": 2
         },
         "meta": {

@@ -18,7 +18,7 @@ public class SourceProvider
 
     public int IntervalMin { get; set; }
 
-    public int RateLimitMs { get; set; }
+    public int RequestDelayMs { get; set; }
 
     public string? Description { get; set; }
 

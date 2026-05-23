@@ -44,7 +44,7 @@ public class SourceProviderConfigure : IEntityTypeConfiguration<SourceProvider>
         entity.Property(e => e.IntervalMin)
             .IsRequired();
 
-        entity.Property(e => e.RateLimitMs)
+        entity.Property(e => e.RequestDelayMs)
             .IsRequired();
 
         entity.Property(e => e.Description)

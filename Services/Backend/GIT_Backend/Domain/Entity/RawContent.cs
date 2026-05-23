@@ -9,6 +9,7 @@ public class RawContent
     public short ExpectCategoryId { get; set; }
 
     public string SourceUrl { get; set; } = string.Empty;
+    public string ContentId { get; set; } = string.Empty;
 
     public string? Author { get; set; }
 

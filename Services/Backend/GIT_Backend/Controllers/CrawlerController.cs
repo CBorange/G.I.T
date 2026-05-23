@@ -12,7 +12,7 @@ public class CrawlerController(CrawlerService crawlerService) : ControllerBase
     [ProducesResponseType(typeof(List<SourceProviderResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<SourceProviderResponse>>> GetSourceProviders(CancellationToken cancellationToken)
     {
-        var sourceProviders = await crawlerService.GetActiveSourceProvidersAsync(cancellationToken);
+        var sourceProviders = await crawlerService.GetActiveProvidersAsync(cancellationToken);
 
         return Ok(sourceProviders);
     }

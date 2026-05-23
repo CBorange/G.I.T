@@ -21,7 +21,6 @@
     <Folder Include="Application\DTO\" />
     <Folder Include="Application\Service\" />
     <Folder Include="Controllers\" />
-    <Folder Include="Domain\" />
   </ItemGroup>
 
   <ItemGroup>
