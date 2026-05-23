@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -370.7192,
-    "scrollLeft": -315.2221,
-    "zoomLevel": 0.76,
+    "scrollTop": 0,
+    "scrollLeft": -79.041,
+    "zoomLevel": 0.85,
     "show": 511,
     "database": 16,
     "databaseName": "",
@@ -467,20 +467,20 @@
       "g5rgX-RvQhuhvFaOss12r": {
         "id": "g5rgX-RvQhuhvFaOss12r",
         "tableId": "GVga0v6dyl_60pcmP3zH-",
-        "name": "rate_limit_ms",
+        "name": "request_delay_ms",
         "comment": "요청 간 대기 시간 (밀리초)",
         "dataType": "integer",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
-          "widthName": 71,
+          "widthName": 95,
           "widthComment": 142,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1778509546094,
+          "updateAt": 1779547168503,
           "createAt": 1778424865260
         }
       },
