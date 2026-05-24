@@ -3,7 +3,7 @@ using Npgsql;
 
 namespace GIT_Backend.Infra
 {
-    public class SecretsLoader
+    public class EnvironmentLoader
     {
         public string LoadConnectionString()
         {

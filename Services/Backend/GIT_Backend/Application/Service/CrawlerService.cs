@@ -19,7 +19,6 @@ public class CrawlerService(GITDBContext dbContext)
                 Name: sourceProvider.Name,
                 Code: sourceProvider.Code,
                 BaseUrl: sourceProvider.BaseUrl,
-                CrawlUrl: sourceProvider.CrawlUrl,
                 IsActive: sourceProvider.IsActive,
                 IntervalMin: sourceProvider.IntervalMin,
                 RateLimitMs: sourceProvider.RequestDelayMs,

@@ -45,7 +45,8 @@ public class AnalyzerProviderConfigure : IEntityTypeConfiguration<AnalyzerProvid
 
         entity.Property(e => e.CreatedAt)
             .HasColumnType("timestamp with time zone")
-            .IsRequired();
+            .IsRequired()
+            .HasDefaultValueSql("now()");
 
         entity.Property(e => e.UpdatedAt)
             .HasColumnType("timestamp with time zone");

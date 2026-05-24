@@ -54,7 +54,8 @@ public class AnalyzedContentConfigure : IEntityTypeConfiguration<AnalyzedContent
 
         entity.Property(e => e.CreatedAt)
             .HasColumnType("timestamp with time zone")
-            .IsRequired();
+            .IsRequired()
+            .HasDefaultValueSql("now()");
 
         entity.HasOne(e => e.RawContent)
             .WithOne(e => e.AnalyzedContent)

@@ -6,7 +6,6 @@ public sealed record SourceProviderResponse(
     string Name,
     string Code,
     string BaseUrl,
-    string CrawlUrl,
     bool IsActive,
     int IntervalMin,
     int RateLimitMs,

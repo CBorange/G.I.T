@@ -33,10 +33,6 @@ public class SourceProviderConfigure : IEntityTypeConfiguration<SourceProvider>
             .HasColumnType("text")
             .IsRequired();
 
-        entity.Property(e => e.CrawlUrl)
-            .HasColumnType("text")
-            .IsRequired();
-
         entity.Property(e => e.IsActive)
             .HasDefaultValue(true)
             .IsRequired();
@@ -52,7 +48,8 @@ public class SourceProviderConfigure : IEntityTypeConfiguration<SourceProvider>
 
         entity.Property(e => e.CreatedAt)
             .HasColumnType("timestamp with time zone")
-            .IsRequired();
+            .IsRequired()
+            .HasDefaultValueSql("now()");
 
         entity.Property(e => e.UpdatedAt)
             .HasColumnType("timestamp with time zone");

@@ -12,8 +12,6 @@ public class SourceProvider
 
     public string BaseUrl { get; set; } = string.Empty;
 
-    public string CrawlUrl { get; set; } = string.Empty;
-
     public bool IsActive { get; set; } = true;
 
     public int IntervalMin { get; set; }
