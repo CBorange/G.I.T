@@ -1,6 +1,7 @@
-@GIT_Backend_HostAddress = http://localhost:5124
+@GIT_Backend_Host = https://localhost:7603
 
-GET {{GIT_Backend_HostAddress}}/weatherforecast/
+
+GET {{GIT_Backend_Host}}/api/crawler/source-providers
 Accept: application/json
 
 ###

@@ -14,15 +14,11 @@ public class CrawlerService(GITDBContext dbContext)
             .OrderBy(sourceProvider => sourceProvider.Id)
             .Select(sourceProvider => new SourceProviderResponse
             (
-                Id: sourceProvider.Id,
-                ExpectCategoryId: sourceProvider.ExpectCategoryId,
                 Name: sourceProvider.Name,
                 Code: sourceProvider.Code,
                 BaseUrl: sourceProvider.BaseUrl,
-                IsActive: sourceProvider.IsActive,
                 IntervalMin: sourceProvider.IntervalMin,
-                RateLimitMs: sourceProvider.RequestDelayMs,
-                Description: sourceProvider.Description
+                RequestDelayMs: sourceProvider.RequestDelayMs
             ))
             .ToListAsync(cancellationToken);
     }
