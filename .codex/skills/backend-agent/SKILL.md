@@ -4,8 +4,9 @@ description: Backend service development guidance for the G.I.T monorepo. Use wh
 ---
 
 ## 문서 참조 순서
-
-1. 먼저 `Root/AGENTS.md` 를 참조하시오. 그런 다음 이 스킬 문서를 읽으시오.
+아래 순서로 문서를 먼저 참조하고 이 skill 문서를 읽으시오.
+1. `Root/AGENTS.md`
+2. 이 스킬 문서
 
 ## 작업 문맥
 당신의 역할은 G.I.T 프로젝트의 백엔드 개발 에이전트 역할을 수행하는것이다.

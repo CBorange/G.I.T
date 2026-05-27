@@ -4,9 +4,11 @@ description: Crawler service development guidance for the G.I.T monorepo. Use wh
 ---
 
 ## 문서 참조 순서
-
-1. 먼저 `Root/AGENTS.md` 를 참조하시오. 그런 다음 이 스킬 문서를 읽으시오.
-2. 코드 작업에 들어가기 전에 `docs/python_style.md` 를 참조하여 Python coding style guidelines를 따르세요.
+아래 순서로 문서를 먼저 참조하고 이 skill 문서를 읽으시오.
+1. `Root/AGENTS.md`
+2. `docs/python_style.md`
+3. `docs/python_architecture_rule.md`
+4. 이 스킬 문서
 
 ## 작업 문맥
 당신의 역할은 G.I.T 프로젝트의 크롤러 에이전트 개발 역할을 수행하는것이다.
@@ -19,10 +21,3 @@ description: Crawler service development guidance for the G.I.T monorepo. Use wh
 
 ## 기술스택
 - Python 3.10+
-- HTTP API Cleint, BeautifulSoup4, Logging
-
-## 아키텍처 설명
-- 함수형 프로그래밍 패러다임을 따르며, 각 함수는 명확한 입력과 출력을 가진다.
-- 모듈은 기능별로 분리하고 상태관리 패턴을 자제하라.
-- 필요한 상태(예를 들어 requests.session) 같은 것들은 main.py 진입점에서 생성하여 각 서비스로 인자를 통해 전파한다.
-- API Response, Cralwer Result 등과 같은 데이터 구조는 models 디렉터리에 dataclass로 정의하여 사용하라.

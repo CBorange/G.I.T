@@ -1,8 +1,10 @@
-using GIT_Backend.Infra;
 using GIT_Backend.Application.Service;
+using GIT_Backend.Application.Worker;
+using GIT_Backend.Infra;
 using GIT_Backend.Infra.Database;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,13 +23,19 @@ try
 
     // DB Connection
     var envLoader = new EnvironmentLoader();
-    var connectionString = envLoader.LoadConnectionString();
+    var connectionString = envLoader.LoadMainDBConnectionString();
+    var redisConnectionString = envLoader.LoadRedisConnectionString();
 
     builder.Services.AddDbContext<GITDBContext>(options =>
         options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
     // Add Services For DI
     builder.Services.AddScoped<CrawlerService>();
+
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect(redisConnectionString));
+    builder.Services.AddHostedService<RawContentConsumerWorker>();
+
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
 

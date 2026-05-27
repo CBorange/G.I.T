@@ -1,0 +1,39 @@
+services:
+  redis:
+    image: redis:8.6.3-alpine
+    container_name: git-redis
+    ports:
+      - "${Redis_Port}:6379"
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - "${Redis_Password}"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  backend:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: git-backend
+    working_dir: /app
+    command:
+      - dotnet
+      - run
+      - --project
+      - GIT_Backend.csproj
+      - --urls
+      - http://0.0.0.0:8080
+    ports:
+      - "${Backend_Port}:8080"
+    env_file:
+      - .env
+    volumes:
+      - ../Services/Backend/GIT_Backend:/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis_data:

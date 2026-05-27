@@ -1,20 +1,16 @@
 using DotNetEnv;
 using Npgsql;
+using StackExchange.Redis;
 
 namespace GIT_Backend.Infra
 {
     public class EnvironmentLoader
     {
-        public string LoadConnectionString()
+        private bool _initialized = false;
+
+        public string LoadMainDBConnectionString()
         {
-            var envPath = Path.Combine(AppContext.BaseDirectory, ".env");
-
-            if (!File.Exists(envPath))
-            {
-                throw new FileNotFoundException($".env file was not found in executable path: {envPath}", envPath);
-            }
-
-            Env.Load(envPath);
+            EnsureInitialized();
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -28,13 +24,45 @@ namespace GIT_Backend.Infra
             return connectionStringBuilder.ConnectionString;
         }
 
+        public string LoadRedisConnectionString()
+        {
+            EnsureInitialized();
+
+            var connectionStringBuilder = new ConfigurationOptions
+            {
+                Password = GetRequiredValue("Redis_Password"),
+                AbortOnConnectFail = false,
+            };
+
+            connectionStringBuilder.EndPoints.Add(
+                GetRequiredValue("Redis_Host"),
+                int.Parse(GetRequiredValue("Redis_Port")));
+
+            return connectionStringBuilder.ToString(includePassword: true);
+        }
+
+        private void EnsureInitialized()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+            var envPath = Path.Combine(AppContext.BaseDirectory, ".env");
+            if (File.Exists(envPath))
+            {
+                Env.NoClobber().Load(envPath);
+            }
+
+            _initialized = true;
+        }
+
         private string GetRequiredValue(string key)
         {
             var value = Env.GetString(key, string.Empty);
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                throw new InvalidOperationException($"{key} is required in .env.");
+                throw new InvalidOperationException($"{key} is required in environment variables or .env.");
             }
 
             return value;
