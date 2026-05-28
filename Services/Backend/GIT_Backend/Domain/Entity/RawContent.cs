@@ -4,12 +4,11 @@ public class RawContent
 {
     public Guid Id { get; set; }
 
-    public short SourceProviderId { get; set; }
-
-    public short ExpectCategoryId { get; set; }
+    public int CrawlTargetId { get; set; }
 
     public string SourceUrl { get; set; } = string.Empty;
-    public string ContentId { get; set; } = string.Empty;
+
+    public string? ContentId { get; set; }
 
     public string? Author { get; set; }
 
@@ -25,9 +24,7 @@ public class RawContent
 
     public DateTimeOffset CreatedAt { get; set; }
 
-    public SourceProvider SourceProvider { get; set; } = null!;
-
-    public SourceCategory ExpectCategory { get; set; } = null!;
+    public CrawlTarget CrawlTarget { get; set; } = null!;
 
     public AnalyzedContent? AnalyzedContent { get; set; }
 }

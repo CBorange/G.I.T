@@ -14,9 +14,7 @@ public class SourceCategory
 
     public DateTimeOffset? UpdatedAt { get; set; }
 
-    public ICollection<SourceProvider> SourceProviders { get; } = new List<SourceProvider>();
-
-    public ICollection<RawContent> RawContents { get; } = new List<RawContent>();
+    public ICollection<CrawlTarget> CrawlTargets { get; } = new List<CrawlTarget>();
 
     public ICollection<AnalyzedContent> AnalyzedContents { get; } = new List<AnalyzedContent>();
 }

@@ -14,11 +14,30 @@ public class CrawlerService(GITDBContext dbContext)
             .OrderBy(sourceProvider => sourceProvider.Id)
             .Select(sourceProvider => new SourceProviderResponse
             (
+                Id: sourceProvider.Id,
                 Name: sourceProvider.Name,
                 Code: sourceProvider.Code,
                 BaseUrl: sourceProvider.BaseUrl,
+                IsActive: sourceProvider.IsActive,
                 IntervalMin: sourceProvider.IntervalMin,
-                RequestDelayMs: sourceProvider.RequestDelayMs
+                RequestDelayMs: sourceProvider.RequestDelayMs,
+                Description: sourceProvider.Description,
+                LastRunningAt: sourceProvider.LastRunningAt,
+                CrawlTargets: sourceProvider.CrawlTargets
+                    .Where(crawlTarget => crawlTarget.IsActive)
+                    .OrderBy(crawlTarget => crawlTarget.Id)
+                    .Select(crawlTarget => new CrawlTargetResponse
+                    (
+                        Id: crawlTarget.Id,
+                        SourceCategoryId: crawlTarget.SourceCategoryId,
+                        Name: crawlTarget.Name,
+                        Code: crawlTarget.Code,
+                        EntryUrl: crawlTarget.EntryUrl,
+                        RequestDelayMs: crawlTarget.RequestDelayMs,
+                        IsActive: crawlTarget.IsActive,
+                        LastRunningAt: crawlTarget.LastRunningAt
+                    ))
+                    .ToList()
             ))
             .ToListAsync(cancellationToken);
     }

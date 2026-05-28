@@ -13,6 +13,8 @@ public class GITDBContext(DbContextOptions<GITDBContext> options) : DbContext(op
 
     public DbSet<AnalyzerProvider> AnalyzerProviders => Set<AnalyzerProvider>();
 
+    public DbSet<CrawlTarget> CrawlTargets => Set<CrawlTarget>();
+
     public DbSet<RawContent> RawContents => Set<RawContent>();
 
     public DbSet<SourceCategory> SourceCategories => Set<SourceCategory>();
@@ -26,6 +28,7 @@ public class GITDBContext(DbContextOptions<GITDBContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new AnalysisRouteConfigure());
         modelBuilder.ApplyConfiguration(new AnalyzedContentConfigure());
         modelBuilder.ApplyConfiguration(new AnalyzerProviderConfigure());
+        modelBuilder.ApplyConfiguration(new CrawlTargetConfigure());
         modelBuilder.ApplyConfiguration(new RawContentConfigure());
         modelBuilder.ApplyConfiguration(new SourceCategoryConfigure());
         modelBuilder.ApplyConfiguration(new SourceProviderConfigure());

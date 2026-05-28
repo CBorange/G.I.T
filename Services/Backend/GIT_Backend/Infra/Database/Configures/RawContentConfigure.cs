@@ -21,20 +21,13 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
         entity.Property(e => e.Id)
             .ValueGeneratedNever();
 
-        entity.Property(e => e.SourceProviderId)
-            .IsRequired();
-
-        entity.Property(e => e.ExpectCategoryId)
+        entity.Property(e => e.CrawlTargetId)
             .IsRequired();
 
         entity.Property(e => e.SourceUrl)
             .HasColumnType("text")
             .IsRequired();
         
-        entity.Property(e => e.ContentId)
-            .HasColumnType("text")
-            .IsRequired();
-
         entity.Property(e => e.ContentId)
             .HasMaxLength(50);
 
@@ -63,16 +56,10 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
             .IsRequired()
             .HasDefaultValueSql("now()");
 
-        entity.HasOne(e => e.SourceProvider)
+        entity.HasOne(e => e.CrawlTarget)
             .WithMany(e => e.RawContents)
-            .HasForeignKey(e => e.SourceProviderId)
-            .HasConstraintName("FK_source_provider_TO_raw_contents")
-            .OnDelete(DeleteBehavior.NoAction);
-
-        entity.HasOne(e => e.ExpectCategory)
-            .WithMany(e => e.RawContents)
-            .HasForeignKey(e => e.ExpectCategoryId)
-            .HasConstraintName("FK_source_category_TO_raw_contents")
+            .HasForeignKey(e => e.CrawlTargetId)
+            .HasConstraintName("FK_crawl_target_TO_raw_contents")
             .OnDelete(DeleteBehavior.NoAction);
     }
 }
