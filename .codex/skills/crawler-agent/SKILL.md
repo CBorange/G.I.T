@@ -6,8 +6,8 @@ description: Crawler service development guidance for the G.I.T monorepo. Use wh
 ## 문서 참조 순서
 아래 순서로 문서를 먼저 참조하고 이 skill 문서를 읽으시오.
 1. `Root/AGENTS.md`
-2. `docs/python_style.md`
-3. `docs/python_architecture_rule.md`
+2. `docs/Python/python_style.md`
+3. `docs/Python/python_architecture_rule.md`
 4. 이 스킬 문서
 
 ## 작업 문맥

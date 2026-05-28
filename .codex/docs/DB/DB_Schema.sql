@@ -69,16 +69,16 @@ COMMENT ON COLUMN "analyzed_contents"."created_at" IS '생성일';
 
 CREATE TABLE "analyzer_provider"
 (
-  "id"            smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
-  "name"          varchar(100) NOT NULL,
-  "code"          varchar(50)  NOT NULL UNIQUE,
-  "provider_type" varchar(50)  NOT NULL,
-  "model_name"    varchar(100) NOT NULL,
-  "endpoint_url"  text        ,
-  "is_enabled"    boolean      NOT NULL,
-  "config_json"   jsonb       ,
-  "created_at"    timestamptz  NOT NULL,
-  "updated_at"    timestamptz ,
+  "id"              smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
+  "name"            varchar(100) NOT NULL,
+  "code"            varchar(50)  NOT NULL UNIQUE,
+  "model_name"      varchar(100) NOT NULL,
+  "endpoint_url"    text        ,
+  "is_enabled"      boolean      NOT NULL,
+  "config_json"     jsonb       ,
+  "created_at"      timestamptz  NOT NULL,
+  "updated_at"      timestamptz ,
+  "last_running_at" timestamptz ,
   PRIMARY KEY ("id")
 );
 
@@ -89,8 +89,6 @@ COMMENT ON COLUMN "analyzer_provider"."id" IS 'ID';
 COMMENT ON COLUMN "analyzer_provider"."name" IS '분석기명';
 
 COMMENT ON COLUMN "analyzer_provider"."code" IS '코드';
-
-COMMENT ON COLUMN "analyzer_provider"."provider_type" IS '분석기 종류';
 
 COMMENT ON COLUMN "analyzer_provider"."model_name" IS 'AI 모델명(스냅샷)';
 
@@ -104,19 +102,61 @@ COMMENT ON COLUMN "analyzer_provider"."created_at" IS '생성일';
 
 COMMENT ON COLUMN "analyzer_provider"."updated_at" IS '수정일';
 
+COMMENT ON COLUMN "analyzer_provider"."last_running_at" IS '마지막 분석 일시';
+
+CREATE TABLE "crawl_target"
+(
+  "id"                 int          NOT NULL GENERATED ALWAYS AS IDENTITY,
+  "source_provider_id" smallint     NOT NULL,
+  "source_category_id" smallint     NOT NULL,
+  "name"               varchar(100) NOT NULL,
+  "code"               varchar(50)  NOT NULL UNIQUE,
+  "entry_url"          text         NOT NULL,
+  "request_delay_ms"   integer     ,
+  "is_active"          boolean      NOT NULL DEFAULT TRUE,
+  "created_at"         timestamptz  NOT NULL,
+  "updated_at"         timestamptz ,
+  "last_running_at"    timestamptz ,
+  PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "crawl_target" IS '카테고리별 크롤링 대상 정보(소분류)';
+
+COMMENT ON COLUMN "crawl_target"."id" IS 'ID';
+
+COMMENT ON COLUMN "crawl_target"."source_provider_id" IS '크롤링 전략';
+
+COMMENT ON COLUMN "crawl_target"."source_category_id" IS '기대 카테고리';
+
+COMMENT ON COLUMN "crawl_target"."name" IS '제공자명';
+
+COMMENT ON COLUMN "crawl_target"."code" IS '세부 크롤링 대상 구현체 코드';
+
+COMMENT ON COLUMN "crawl_target"."entry_url" IS '크롤링 시작 URL';
+
+COMMENT ON COLUMN "crawl_target"."request_delay_ms" IS 'entry당 요청 대기 시간';
+
+COMMENT ON COLUMN "crawl_target"."is_active" IS '활성화 여부';
+
+COMMENT ON COLUMN "crawl_target"."created_at" IS '생성일';
+
+COMMENT ON COLUMN "crawl_target"."updated_at" IS '수정일';
+
+COMMENT ON COLUMN "crawl_target"."last_running_at" IS '마지막 실행 일시';
+
 CREATE TABLE "raw_contents"
 (
-  "id"                 uuid         NOT NULL,
-  "source_provider_id" smallint     NOT NULL,
-  "expect_category_id" smallint     NOT NULL,
-  "source_url"         text         NOT NULL UNIQUE,
-  "author"             varchar(100),
-  "published_at"       timestamptz ,
-  "title"              text         NOT NULL,
-  "body"               text        ,
-  "raw_payload_json"   jsonb       ,
-  "crawled_at"         timestamptz  NOT NULL,
-  "created_at"         timestamptz  NOT NULL,
+  "id"               uuid         NOT NULL,
+  "crawl_target_id"  int          NOT NULL,
+  "source_url"       text         NOT NULL UNIQUE,
+  "content_id"       varchar(50)  UNIQUE,
+  "author"           varchar(100),
+  "published_at"     timestamptz ,
+  "title"            text         NOT NULL,
+  "body"             text        ,
+  "raw_payload_json" jsonb       ,
+  "crawled_at"       timestamptz  NOT NULL,
+  "created_at"       timestamptz  NOT NULL,
   PRIMARY KEY ("id")
 );
 
@@ -124,11 +164,11 @@ COMMENT ON TABLE "raw_contents" IS '크롤링 원문 데이터(1차 가공)';
 
 COMMENT ON COLUMN "raw_contents"."id" IS '기본키';
 
-COMMENT ON COLUMN "raw_contents"."source_provider_id" IS '제공자 ID';
-
-COMMENT ON COLUMN "raw_contents"."expect_category_id" IS '수집 당시 기준 기대 카테고리 ID';
+COMMENT ON COLUMN "raw_contents"."crawl_target_id" IS '크롤링 대상 ID';
 
 COMMENT ON COLUMN "raw_contents"."source_url" IS '원문 URL';
+
+COMMENT ON COLUMN "raw_contents"."content_id" IS '소스 고유 ID(기사 ID)';
 
 COMMENT ON COLUMN "raw_contents"."author" IS '데이터 제공자(언론사, 사이트명 등)';
 
@@ -174,40 +214,35 @@ COMMENT ON COLUMN "source_category"."updated_at" IS '수정일';
 
 CREATE TABLE "source_provider"
 (
-  "id"                 smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
-  "expect_category_id" smallint     NOT NULL,
-  "name"               varchar(100) NOT NULL,
-  "code"               varchar(50)  NOT NULL UNIQUE,
-  "base_url"           text         NOT NULL,
-  "crawl_url"          text         NOT NULL,
-  "is_active"          boolean      NOT NULL DEFAULT TRUE,
-  "interval_min"       integer      NOT NULL,
-  "request_delay_ms"   integer      NOT NULL,
-  "description"        varchar(200),
-  "created_at"         timestamptz  NOT NULL,
-  "updated_at"         timestamptz ,
+  "id"               smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
+  "name"             varchar(100) NOT NULL,
+  "code"             varchar(50)  NOT NULL UNIQUE,
+  "base_url"         text         NOT NULL,
+  "is_active"        boolean      NOT NULL DEFAULT TRUE,
+  "interval_min"     integer      NOT NULL,
+  "request_delay_ms" integer      NOT NULL,
+  "description"      varchar(200),
+  "created_at"       timestamptz  NOT NULL,
+  "updated_at"       timestamptz ,
+  "last_running_at"  timestamptz ,
   PRIMARY KEY ("id")
 );
 
-COMMENT ON TABLE "source_provider" IS '크롤링 소스 및 전략';
+COMMENT ON TABLE "source_provider" IS '크롤링 소스 및 전략(대분류)';
 
 COMMENT ON COLUMN "source_provider"."id" IS 'ID';
 
-COMMENT ON COLUMN "source_provider"."expect_category_id" IS '목표 타겟 카테고리(전략)';
-
 COMMENT ON COLUMN "source_provider"."name" IS '제공자명';
 
-COMMENT ON COLUMN "source_provider"."code" IS '코드';
+COMMENT ON COLUMN "source_provider"."code" IS '크롤러 구현체 코드';
 
 COMMENT ON COLUMN "source_provider"."base_url" IS '사이트 URL';
 
-COMMENT ON COLUMN "source_provider"."crawl_url" IS '크롤링 시작 URL';
-
 COMMENT ON COLUMN "source_provider"."is_active" IS '활성화 여부';
 
-COMMENT ON COLUMN "source_provider"."interval_min" IS '크롤링 주기(분)';
+COMMENT ON COLUMN "source_provider"."interval_min" IS '크롤러 기본 실행 주기';
 
-COMMENT ON COLUMN "source_provider"."request_delay_ms" IS '요청 간 대기 시간 (밀리초)';
+COMMENT ON COLUMN "source_provider"."request_delay_ms" IS 'entry당 요청 대기 시간(기본값)';
 
 COMMENT ON COLUMN "source_provider"."description" IS '설명';
 
@@ -215,15 +250,7 @@ COMMENT ON COLUMN "source_provider"."created_at" IS '생성일';
 
 COMMENT ON COLUMN "source_provider"."updated_at" IS '수정일';
 
-ALTER TABLE "source_provider"
-  ADD CONSTRAINT "FK_source_category_TO_source_provider"
-    FOREIGN KEY ("expect_category_id")
-    REFERENCES "source_category" ("id");
-
-ALTER TABLE "raw_contents"
-  ADD CONSTRAINT "FK_source_provider_TO_raw_contents"
-    FOREIGN KEY ("source_provider_id")
-    REFERENCES "source_provider" ("id");
+COMMENT ON COLUMN "source_provider"."last_running_at" IS '마지막 실행 일시';
 
 ALTER TABLE "analyzed_contents"
   ADD CONSTRAINT "FK_raw_contents_TO_analyzed_contents"
@@ -250,10 +277,20 @@ ALTER TABLE "analyzed_contents"
     FOREIGN KEY ("actual_category_id")
     REFERENCES "source_category" ("id");
 
-ALTER TABLE "raw_contents"
-  ADD CONSTRAINT "FK_source_category_TO_raw_contents"
-    FOREIGN KEY ("expect_category_id")
+ALTER TABLE "crawl_target"
+  ADD CONSTRAINT "FK_source_provider_TO_crawl_target"
+    FOREIGN KEY ("source_provider_id")
+    REFERENCES "source_provider" ("id");
+
+ALTER TABLE "crawl_target"
+  ADD CONSTRAINT "FK_source_category_TO_crawl_target"
+    FOREIGN KEY ("source_category_id")
     REFERENCES "source_category" ("id");
+
+ALTER TABLE "raw_contents"
+  ADD CONSTRAINT "FK_crawl_target_TO_raw_contents"
+    FOREIGN KEY ("crawl_target_id")
+    REFERENCES "crawl_target" ("id");
 
 CREATE UNIQUE INDEX "UQ_analysis_route_source_analyzer"
   ON "analysis_route" ("source_provider_id" ASC, "analyzer_provider_id" ASC);
