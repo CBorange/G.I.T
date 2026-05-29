@@ -1,12 +1,51 @@
 
+CREATE TABLE " analyze_jobs"
+(
+  "id"                   uuid         NOT NULL,
+  "raw_contents_id"      uuid         NOT NULL,
+  "analyzer_provider_id" smallint     NOT NULL,
+  "prompt_policy_code"   varchar(100) NOT NULL,
+  "status"               varchar(20)  NOT NULL,
+  "attempt_count"        smallint     NOT NULL,
+  "max_atempt_count"     smallint    ,
+  "last_error"           text        ,
+  "last_running_at"      timestamptz ,
+  "ended_at"             timestamptz ,
+  PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE " analyze_jobs" IS '분석 작업';
+
+COMMENT ON COLUMN " analyze_jobs"."id" IS '기본키';
+
+COMMENT ON COLUMN " analyze_jobs"."raw_contents_id" IS '작업 대상 원문 ID';
+
+COMMENT ON COLUMN " analyze_jobs"."analyzer_provider_id" IS '분석 시점의 분석기 ID';
+
+COMMENT ON COLUMN " analyze_jobs"."prompt_policy_code" IS '분석 프롬프트 종류 코드(스냅샷)';
+
+COMMENT ON COLUMN " analyze_jobs"."status" IS '상태';
+
+COMMENT ON COLUMN " analyze_jobs"."attempt_count" IS '분석 시도 횟수';
+
+COMMENT ON COLUMN " analyze_jobs"."max_atempt_count" IS '최대 재시도 횟수';
+
+COMMENT ON COLUMN " analyze_jobs"."last_error" IS '마지막 실패 사유';
+
+COMMENT ON COLUMN " analyze_jobs"."last_running_at" IS '마지막 시도 일시';
+
+COMMENT ON COLUMN " analyze_jobs"."ended_at" IS '최종 성공/실패 시각';
+
 CREATE TABLE "analysis_route"
 (
-  "id"                   smallint    NOT NULL GENERATED ALWAYS AS IDENTITY,
-  "source_provider_id"   smallint    NOT NULL,
-  "analyzer_provider_id" smallint    NOT NULL,
-  "is_enabled"           boolean     NOT NULL,
-  "created_at"           timestamptz NOT NULL,
-  "updated_at"           timestamptz,
+  "id"                   smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
+  "source_provider_id"   smallint    ,
+  "source_category_id"   smallint    ,
+  "analyzer_provider_id" smallint     NOT NULL,
+  "prompt_policy_code"   varchar(100) NOT NULL,
+  "is_enabled"           boolean      NOT NULL,
+  "created_at"           timestamptz  NOT NULL,
+  "updated_at"           timestamptz ,
   PRIMARY KEY ("id")
 );
 
@@ -14,9 +53,13 @@ COMMENT ON TABLE "analysis_route" IS '분석기 라우팅 테이블';
 
 COMMENT ON COLUMN "analysis_route"."id" IS 'ID';
 
-COMMENT ON COLUMN "analysis_route"."source_provider_id" IS '크롤링 소스 전략 ID';
+COMMENT ON COLUMN "analysis_route"."source_provider_id" IS '대상 크롤링 소스 전략 ID';
+
+COMMENT ON COLUMN "analysis_route"."source_category_id" IS '대상 카테고리 ID';
 
 COMMENT ON COLUMN "analysis_route"."analyzer_provider_id" IS 'AI 분석기 전략 ID';
+
+COMMENT ON COLUMN "analysis_route"."prompt_policy_code" IS '분석 프롬프트 종류 코드';
 
 COMMENT ON COLUMN "analysis_route"."is_enabled" IS '라우팅 정책 활성화 여부';
 
@@ -27,8 +70,9 @@ COMMENT ON COLUMN "analysis_route"."updated_at" IS '수정일';
 CREATE TABLE "analyzed_contents"
 (
   "id"                    uuid         NOT NULL,
-  "raw_content_id"        uuid         NOT NULL UNIQUE,
   "analyzer_provider_id"  smallint     NOT NULL,
+  "raw_contents_id"       uuid         NOT NULL,
+  "analyze_job_id"        uuid         NOT NULL,
   "actual_category_id"    smallint     NOT NULL,
   "title_summary"         text         NOT NULL,
   "body_summary"          text         NOT NULL,
@@ -38,6 +82,9 @@ CREATE TABLE "analyzed_contents"
   "analysis_payload_json" jsonb       ,
   "analyzed_at"           timestamptz  NOT NULL,
   "created_at"            timestamptz  NOT NULL,
+  "updated_at"            timestamptz ,
+  "confidence"            numeric(5,4) NOT NULL,
+  "confidence_reason"     text         NOT NULL,
   PRIMARY KEY ("id")
 );
 
@@ -45,9 +92,11 @@ COMMENT ON TABLE "analyzed_contents" IS 'AI 분석 데이터(2차 가공)';
 
 COMMENT ON COLUMN "analyzed_contents"."id" IS '기본키';
 
-COMMENT ON COLUMN "analyzed_contents"."raw_content_id" IS '원문 데이터 FK';
-
 COMMENT ON COLUMN "analyzed_contents"."analyzer_provider_id" IS '제공자 ID';
+
+COMMENT ON COLUMN "analyzed_contents"."raw_contents_id" IS '원문 데이터 ID';
+
+COMMENT ON COLUMN "analyzed_contents"."analyze_job_id" IS '분석 작업 ID';
 
 COMMENT ON COLUMN "analyzed_contents"."actual_category_id" IS '실제 카테고리 ID';
 
@@ -66,6 +115,12 @@ COMMENT ON COLUMN "analyzed_contents"."analysis_payload_json" IS 'AI 분석 실�
 COMMENT ON COLUMN "analyzed_contents"."analyzed_at" IS '분석일';
 
 COMMENT ON COLUMN "analyzed_contents"."created_at" IS '생성일';
+
+COMMENT ON COLUMN "analyzed_contents"."updated_at" IS '수정일(재분석 및 갱신일)';
+
+COMMENT ON COLUMN "analyzed_contents"."confidence" IS '분석 신뢰도';
+
+COMMENT ON COLUMN "analyzed_contents"."confidence_reason" IS '신뢰도 채점 근거';
 
 CREATE TABLE "analyzer_provider"
 (
@@ -219,7 +274,6 @@ CREATE TABLE "source_provider"
   "code"             varchar(50)  NOT NULL UNIQUE,
   "base_url"         text         NOT NULL,
   "is_active"        boolean      NOT NULL DEFAULT TRUE,
-  "interval_min"     integer      NOT NULL,
   "request_delay_ms" integer      NOT NULL,
   "description"      varchar(200),
   "created_at"       timestamptz  NOT NULL,
@@ -240,8 +294,6 @@ COMMENT ON COLUMN "source_provider"."base_url" IS '사이트 URL';
 
 COMMENT ON COLUMN "source_provider"."is_active" IS '활성화 여부';
 
-COMMENT ON COLUMN "source_provider"."interval_min" IS '크롤러 기본 실행 주기';
-
 COMMENT ON COLUMN "source_provider"."request_delay_ms" IS 'entry당 요청 대기 시간(기본값)';
 
 COMMENT ON COLUMN "source_provider"."description" IS '설명';
@@ -251,16 +303,6 @@ COMMENT ON COLUMN "source_provider"."created_at" IS '생성일';
 COMMENT ON COLUMN "source_provider"."updated_at" IS '수정일';
 
 COMMENT ON COLUMN "source_provider"."last_running_at" IS '마지막 실행 일시';
-
-ALTER TABLE "analyzed_contents"
-  ADD CONSTRAINT "FK_raw_contents_TO_analyzed_contents"
-    FOREIGN KEY ("raw_content_id")
-    REFERENCES "raw_contents" ("id");
-
-ALTER TABLE "analysis_route"
-  ADD CONSTRAINT "FK_source_provider_TO_analysis_route"
-    FOREIGN KEY ("source_provider_id")
-    REFERENCES "source_provider" ("id");
 
 ALTER TABLE "analysis_route"
   ADD CONSTRAINT "FK_analyzer_provider_TO_analysis_route"
@@ -272,25 +314,55 @@ ALTER TABLE "analyzed_contents"
     FOREIGN KEY ("analyzer_provider_id")
     REFERENCES "analyzer_provider" ("id");
 
+ALTER TABLE "crawl_target"
+  ADD CONSTRAINT "FK_source_provider_TO_crawl_target"
+    FOREIGN KEY ("source_provider_id")
+    REFERENCES "source_provider" ("id");
+
+ALTER TABLE "raw_contents"
+  ADD CONSTRAINT "FK_crawl_target_TO_raw_contents"
+    FOREIGN KEY ("crawl_target_id")
+    REFERENCES "crawl_target" ("id");
+
+ALTER TABLE "analysis_route"
+  ADD CONSTRAINT "FK_source_provider_TO_analysis_route"
+    FOREIGN KEY ("source_provider_id")
+    REFERENCES "source_provider" ("id");
+
+ALTER TABLE "analyzed_contents"
+  ADD CONSTRAINT "FK_ analyze_jobs_TO_analyzed_contents"
+    FOREIGN KEY ("analyze_job_id")
+    REFERENCES " analyze_jobs" ("id");
+
+ALTER TABLE " analyze_jobs"
+  ADD CONSTRAINT "FK_raw_contents_TO_ analyze_jobs"
+    FOREIGN KEY ("raw_contents_id")
+    REFERENCES "raw_contents" ("id");
+
+ALTER TABLE " analyze_jobs"
+  ADD CONSTRAINT "FK_analyzer_provider_TO_ analyze_jobs"
+    FOREIGN KEY ("analyzer_provider_id")
+    REFERENCES "analyzer_provider" ("id");
+
+ALTER TABLE "analyzed_contents"
+  ADD CONSTRAINT "FK_raw_contents_TO_analyzed_contents"
+    FOREIGN KEY ("raw_contents_id")
+    REFERENCES "raw_contents" ("id");
+
 ALTER TABLE "analyzed_contents"
   ADD CONSTRAINT "FK_source_category_TO_analyzed_contents"
     FOREIGN KEY ("actual_category_id")
     REFERENCES "source_category" ("id");
 
 ALTER TABLE "crawl_target"
-  ADD CONSTRAINT "FK_source_provider_TO_crawl_target"
-    FOREIGN KEY ("source_provider_id")
-    REFERENCES "source_provider" ("id");
-
-ALTER TABLE "crawl_target"
   ADD CONSTRAINT "FK_source_category_TO_crawl_target"
     FOREIGN KEY ("source_category_id")
     REFERENCES "source_category" ("id");
 
-ALTER TABLE "raw_contents"
-  ADD CONSTRAINT "FK_crawl_target_TO_raw_contents"
-    FOREIGN KEY ("crawl_target_id")
-    REFERENCES "crawl_target" ("id");
+ALTER TABLE "analysis_route"
+  ADD CONSTRAINT "FK_source_category_TO_analysis_route"
+    FOREIGN KEY ("source_category_id")
+    REFERENCES "source_category" ("id");
 
 CREATE UNIQUE INDEX "UQ_analysis_route_source_analyzer"
   ON "analysis_route" ("source_provider_id" ASC, "analyzer_provider_id" ASC);
