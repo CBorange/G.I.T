@@ -36,6 +36,8 @@ public class CrawlTargetConfigure : IEntityTypeConfiguration<CrawlTarget>
             .HasColumnType("text")
             .IsRequired();
 
+        entity.Property(e => e.RequestDelayMs);
+
         entity.Property(e => e.IsActive)
             .HasDefaultValue(true)
             .IsRequired();

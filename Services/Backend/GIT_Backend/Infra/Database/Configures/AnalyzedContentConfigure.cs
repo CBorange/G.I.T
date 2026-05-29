@@ -12,9 +12,6 @@ public class AnalyzedContentConfigure : IEntityTypeConfiguration<AnalyzedContent
 
         entity.HasKey(e => e.Id);
 
-        entity.HasIndex(e => e.RawContentId)
-            .IsUnique();
-
         entity.Property(e => e.Id)
             .ValueGeneratedNever();
 
@@ -22,6 +19,9 @@ public class AnalyzedContentConfigure : IEntityTypeConfiguration<AnalyzedContent
             .IsRequired();
 
         entity.Property(e => e.AnalyzerProviderId)
+            .IsRequired();
+
+        entity.Property(e => e.AnalyzeJobId)
             .IsRequired();
 
         entity.Property(e => e.ActualCategoryId)
@@ -57,10 +57,27 @@ public class AnalyzedContentConfigure : IEntityTypeConfiguration<AnalyzedContent
             .IsRequired()
             .HasDefaultValueSql("now()");
 
+        entity.Property(e => e.UpdatedAt)
+            .HasColumnType("timestamp with time zone");
+
+        entity.Property(e => e.Confidence)
+            .HasColumnType("numeric(5,4)")
+            .IsRequired();
+
+        entity.Property(e => e.ConfidenceReason)
+            .HasColumnType("text")
+            .IsRequired();
+
         entity.HasOne(e => e.RawContent)
             .WithOne(e => e.AnalyzedContent)
             .HasForeignKey<AnalyzedContent>(e => e.RawContentId)
             .HasConstraintName("FK_raw_contents_TO_analyzed_contents")
+            .OnDelete(DeleteBehavior.NoAction);
+
+        entity.HasOne(e => e.AnalyzeJob)
+            .WithOne(e => e.AnalyzedContent)
+            .HasForeignKey<AnalyzedContent>(e => e.AnalyzeJobId)
+            .HasConstraintName("FK_ analyze_jobs_TO_analyzed_contents")
             .OnDelete(DeleteBehavior.NoAction);
 
         entity.HasOne(e => e.AnalyzerProvider)

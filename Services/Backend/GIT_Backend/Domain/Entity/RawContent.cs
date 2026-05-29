@@ -26,5 +26,7 @@ public class RawContent
 
     public CrawlTarget CrawlTarget { get; set; } = null!;
 
-    public AnalyzedContent? AnalyzedContent { get; set; }
+    public AnalyzeJob AnalyzeJob { get; set; } = null!;
+
+    public AnalyzedContent AnalyzedContent { get; set; } = null!;
 }

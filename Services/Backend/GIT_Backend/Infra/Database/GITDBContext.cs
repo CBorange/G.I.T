@@ -7,6 +7,8 @@ namespace GIT_Backend.Infra.Database;
 
 public class GITDBContext(DbContextOptions<GITDBContext> options) : DbContext(options)
 {
+    public DbSet<AnalyzeJob> AnalyzeJobs => Set<AnalyzeJob>();
+
     public DbSet<AnalysisRoute> AnalysisRoutes => Set<AnalysisRoute>();
 
     public DbSet<AnalyzedContent> AnalyzedContents => Set<AnalyzedContent>();
@@ -25,6 +27,7 @@ public class GITDBContext(DbContextOptions<GITDBContext> options) : DbContext(op
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.ApplyConfiguration(new AnalyzeJobConfigure());
         modelBuilder.ApplyConfiguration(new AnalysisRouteConfigure());
         modelBuilder.ApplyConfiguration(new AnalyzedContentConfigure());
         modelBuilder.ApplyConfiguration(new AnalyzerProviderConfigure());

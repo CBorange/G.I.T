@@ -14,57 +14,65 @@ public class SourceCategoryConfigure : IEntityTypeConfiguration<SourceCategory>
             {
                 Id = 1,
                 Code = SourceCategoryCodes.Culture,
-                Name = "¹®È­",
-                Description = "¹®È­ °ü·Ã ÀÌ½´"
+                Name = "ë¬¸í™”",
+                IsActive = true,
+                Description = "ë¬¸í™” ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 2,
                 Code = SourceCategoryCodes.Economy,
-                Name = "°æÁ¦",
-                Description = "°æÁ¦ °ü·Ã ÀÌ½´"
+                Name = "ê²½ì œ",
+                IsActive = true,
+                Description = "ê²½ì œ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 3,
                 Code = SourceCategoryCodes.Welfare,
-                Name = "º¹Áö",
-                Description = "º¹Áö °ü·Ã ÀÌ½´"
+                Name = "ë³µì§€",
+                IsActive = true,
+                Description = "ë³µì§€ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 4,
                 Code = SourceCategoryCodes.Transport,
-                Name = "±³Åë",
-                Description = "±³Åë °ü·Ã ÀÌ½´"
+                Name = "êµí†µ",
+                IsActive = true,
+                Description = "êµí†µ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 5,
                 Code = SourceCategoryCodes.Environment,
-                Name = "È¯°æ",
-                Description = "È¯°æ °ü·Ã ÀÌ½´"
+                Name = "í™˜ê²½",
+                IsActive = true,
+                Description = "í™˜ê²½ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 6,
                 Code = SourceCategoryCodes.Housing,
-                Name = "ÁÖÅÃ",
-                Description = "ÁÖÅÃ °ü·Ã ÀÌ½´"
+                Name = "ì£¼íƒ",
+                IsActive = true,
+                Description = "ì£¼íƒ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 7,
                 Code = SourceCategoryCodes.Safety,
-                Name = "¾ÈÀü",
-                Description = "¾ÈÀü °ü·Ã ÀÌ½´"
+                Name = "ì•ˆì „",
+                IsActive = true,
+                Description = "ì•ˆì „ ê´€ë ¨ ì´ìŠˆ"
             },
             new SourceCategory
             {
                 Id = 8,
                 Code = SourceCategoryCodes.Administration,
-                Name = "ÇàÁ¤",
-                Description = "ÇàÁ¤ °ü·Ã ÀÌ½´"
+                Name = "í–‰ì •",
+                IsActive = true,
+                Description = "í–‰ì • ê´€ë ¨ ì´ìŠˆ"
             }
         );
     }
@@ -91,6 +99,10 @@ public class SourceCategoryConfigure : IEntityTypeConfiguration<SourceCategory>
 
         entity.Property(e => e.Description)
             .HasMaxLength(200);
+
+        entity.Property(e => e.IsActive)
+            .HasDefaultValue(true)
+            .IsRequired();
 
         entity.Property(e => e.CreatedAt)
             .HasColumnType("timestamp with time zone")

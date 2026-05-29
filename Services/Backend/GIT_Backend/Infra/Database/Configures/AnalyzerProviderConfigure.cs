@@ -26,10 +26,6 @@ public class AnalyzerProviderConfigure : IEntityTypeConfiguration<AnalyzerProvid
             .HasMaxLength(50)
             .IsRequired();
 
-        entity.Property(e => e.ProviderType)
-            .HasMaxLength(50)
-            .IsRequired();
-
         entity.Property(e => e.ModelName)
             .HasMaxLength(100)
             .IsRequired();
@@ -49,6 +45,9 @@ public class AnalyzerProviderConfigure : IEntityTypeConfiguration<AnalyzerProvid
             .HasDefaultValueSql("now()");
 
         entity.Property(e => e.UpdatedAt)
+            .HasColumnType("timestamp with time zone");
+
+        entity.Property(e => e.LastRunningAt)
             .HasColumnType("timestamp with time zone");
     }
 }

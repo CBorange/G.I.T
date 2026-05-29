@@ -6,7 +6,6 @@ public sealed record SourceProviderResponse(
     string Code,
     string BaseUrl,
     bool IsActive,
-    int IntervalMin,
     int RequestDelayMs,
     string? Description,
     DateTimeOffset? LastRunningAt,

@@ -12,8 +12,6 @@ public class SourceProvider
 
     public bool IsActive { get; set; } = true;
 
-    public int IntervalMin { get; set; }
-
     public int RequestDelayMs { get; set; }
 
     public string? Description { get; set; }

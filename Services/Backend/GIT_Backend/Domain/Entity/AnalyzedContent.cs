@@ -8,6 +8,8 @@ public class AnalyzedContent
 
     public short AnalyzerProviderId { get; set; }
 
+    public Guid AnalyzeJobId { get; set; }
+
     public short ActualCategoryId { get; set; }
 
     public string TitleSummary { get; set; } = string.Empty;
@@ -26,7 +28,15 @@ public class AnalyzedContent
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    public DateTimeOffset? UpdatedAt { get; set; }
+
+    public decimal Confidence { get; set; }
+
+    public string ConfidenceReason { get; set; } = string.Empty;
+
     public RawContent RawContent { get; set; } = null!;
+
+    public AnalyzeJob AnalyzeJob { get; set; } = null!;
 
     public AnalyzerProvider AnalyzerProvider { get; set; } = null!;
 

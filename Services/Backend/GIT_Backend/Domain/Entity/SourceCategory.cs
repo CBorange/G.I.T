@@ -10,6 +10,8 @@ public class SourceCategory
 
     public string? Description { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }
@@ -17,4 +19,6 @@ public class SourceCategory
     public ICollection<CrawlTarget> CrawlTargets { get; } = new List<CrawlTarget>();
 
     public ICollection<AnalyzedContent> AnalyzedContents { get; } = new List<AnalyzedContent>();
+
+    public ICollection<AnalysisRoute> AnalysisRoutes { get; } = new List<AnalysisRoute>();
 }

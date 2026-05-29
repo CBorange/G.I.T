@@ -34,9 +34,6 @@ public class SourceProviderConfigure : IEntityTypeConfiguration<SourceProvider>
             .HasDefaultValue(true)
             .IsRequired();
 
-        entity.Property(e => e.IntervalMin)
-            .IsRequired();
-
         entity.Property(e => e.RequestDelayMs)
             .IsRequired();
 

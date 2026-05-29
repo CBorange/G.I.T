@@ -19,10 +19,15 @@ public class AnalysisRouteConfigure : IEntityTypeConfiguration<AnalysisRoute>
         entity.Property(e => e.Id)
             .UseIdentityAlwaysColumn();
 
-        entity.Property(e => e.SourceProviderId)
-            .IsRequired();
+        entity.Property(e => e.SourceProviderId);
+
+        entity.Property(e => e.SourceCategoryId);
 
         entity.Property(e => e.AnalyzerProviderId)
+            .IsRequired();
+
+        entity.Property(e => e.PromptPolicyCode)
+            .HasMaxLength(100)
             .IsRequired();
 
         entity.Property(e => e.IsEnabled)
@@ -40,6 +45,12 @@ public class AnalysisRouteConfigure : IEntityTypeConfiguration<AnalysisRoute>
             .WithMany(e => e.AnalysisRoutes)
             .HasForeignKey(e => e.SourceProviderId)
             .HasConstraintName("FK_source_provider_TO_analysis_route")
+            .OnDelete(DeleteBehavior.NoAction);
+
+        entity.HasOne(e => e.SourceCategory)
+            .WithMany(e => e.AnalysisRoutes)
+            .HasForeignKey(e => e.SourceCategoryId)
+            .HasConstraintName("FK_source_category_TO_analysis_route")
             .OnDelete(DeleteBehavior.NoAction);
 
         entity.HasOne(e => e.AnalyzerProvider)

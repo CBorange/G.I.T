@@ -8,8 +8,6 @@ public class AnalyzerProvider
 
     public string Code { get; set; } = string.Empty;
 
-    public string ProviderType { get; set; } = string.Empty;
-
     public string ModelName { get; set; } = string.Empty;
 
     public string? EndpointUrl { get; set; }
@@ -22,7 +20,11 @@ public class AnalyzerProvider
 
     public DateTimeOffset? UpdatedAt { get; set; }
 
+    public DateTimeOffset? LastRunningAt { get; set; }
+
     public ICollection<AnalysisRoute> AnalysisRoutes { get; } = new List<AnalysisRoute>();
 
     public ICollection<AnalyzedContent> AnalyzedContents { get; } = new List<AnalyzedContent>();
+
+    public ICollection<AnalyzeJob> AnalyzeJobs { get; } = new List<AnalyzeJob>();
 }

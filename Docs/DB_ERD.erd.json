@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -575.4059,
-    "scrollLeft": -250,
+    "scrollTop": -920.4059,
+    "scrollLeft": -644,
     "zoomLevel": 0.82,
     "show": 511,
     "database": 16,
@@ -49,10 +49,10 @@
       "3kS5WkwosJa_UCcrea5gO",
       "zFV5LacTRS0fQB3Dov2vI",
       "rFR3hGAlkpeqTTosjBZw0",
-      "H5O3FAwgmi0b9Ddwx789c",
       "iXvtljP8H9Qt-GsRZw2YY",
       "8_u9lbpJ07OeeTctOrmsB",
-      "ZX82GJWy5PdpsqFhlcGOd"
+      "ZX82GJWy5PdpsqFhlcGOd",
+      "H5O3FAwgmi0b9Ddwx789c"
     ],
     "indexIds": [
       "AO5uAn7RFNt1M5ttHG6ix"
@@ -247,7 +247,8 @@
           "CJzmY6InsLVlETMTco-yb",
           "WBqzMtEnFBisgqeNcav5Y",
           "OcAc3EzVi08hGuf79NtXV",
-          "kISG9BSuaUedq4W7DHgIb"
+          "kISG9BSuaUedq4W7DHgIb",
+          "rXGsy5J-J182spH__mQTq"
         ],
         "ui": {
           "x": 1234.4524,
@@ -258,7 +259,7 @@
           "color": "#03A9F4"
         },
         "meta": {
-          "updateAt": 1780068184844,
+          "updateAt": 1780070272362,
           "createAt": 1778682242412
         }
       },
@@ -2896,6 +2897,26 @@
           "updateAt": 1780068398379,
           "createAt": 1780068398379
         }
+      },
+      "rXGsy5J-J182spH__mQTq": {
+        "id": "rXGsy5J-J182spH__mQTq",
+        "tableId": "07FKXZr5mBFdoyY-7npaX",
+        "name": "id",
+        "comment": "기본키",
+        "dataType": "uuid",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1780070263734,
+          "createAt": 1780070263734
+        }
       }
     },
     "relationshipEntities": {
@@ -3401,6 +3422,34 @@
         "meta": {
           "updateAt": 1780068140374,
           "createAt": 1780068140374
+        }
+      },
+      "kW7M4SgRXvqHoxvv9YGl5": {
+        "id": "kW7M4SgRXvqHoxvv9YGl5",
+        "identification": false,
+        "relationshipType": 8,
+        "startRelationshipType": 2,
+        "start": {
+          "tableId": "n4NzzOvwvkpH5blq2p5hr",
+          "columnIds": [
+            "g0VdiUD26HLbkWZltaw8K"
+          ],
+          "x": 954.1823999999999,
+          "y": 1261.2938,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "07FKXZr5mBFdoyY-7npaX",
+          "columnIds": [
+            "rXGsy5J-J182spH__mQTq"
+          ],
+          "x": 1234.4524,
+          "y": 1347.7499,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1780070263734,
+          "createAt": 1780070263734
         }
       }
     },
