@@ -4,45 +4,39 @@ import requests
 from requests import Response, Session
 
 
+
 def create_session(headers: dict[str, str] | None = None) -> Session:
-    headers = {
+    default_headers = {
         "User-Agent": "GIT-Crawler/1.0",
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": None,
     }
 
-    session = requests.Session()
+    # 사용자 입력 headers가 있으면 기본값 덮어쓰기
+    merged_headers = {**default_headers, **(headers or {})}
 
-    if headers is not None:
-        session.headers.update(headers)
+    session = requests.Session()
+    session.headers.update(merged_headers)
 
     return session
 
-
-def http_get(session: Session, url: str, *, params: dict[str, Any] | None = None,
-             headers: dict[str, str] | None = None, timeout_seconds: int = 10) -> Response:
-    response = session.get(url, params=params, headers=headers, timeout=timeout_seconds)
-    response.raise_for_status()
-    return response
-
-
-def http_post(session: Session, url: str, *, data: Any | None = None, json: Any | None = None,
-              headers: dict[str, str] | None = None, timeout_seconds: int = 10) -> Response:
-    response = session.post(url, data=data, json=json, headers=headers, timeout=timeout_seconds)
-    response.raise_for_status()
-    return response
-
-
-def http_put(session: Session, url: str, *, data: Any | None = None, json: Any | None = None,
-             headers: dict[str, str] | None = None, timeout_seconds: int = 10) -> Response:
-    response = session.put(url, data=data, json=json, headers=headers, timeout=timeout_seconds)
-    response.raise_for_status()
-    return response
-
-
-def http_delete(session: Session, url: str, *, headers: dict[str, str] | None = None,
-                timeout_seconds: int = 10) -> Response:
-    response = session.delete(url, headers=headers, timeout=timeout_seconds)
-    response.raise_for_status()
-    return response
+def create_crawler_session() -> Session:
+    return create_session(
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/136.0.0.0 Safari/537.36"
+            ),
+            "Accept": (
+                "text/html,"
+                "application/xhtml+xml,"
+                "application/xml;q=0.9,"
+                "image/avif,"
+                "image/webp,"
+                "*/*;q=0.8"
+            ),
+            "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+        }
+    )
+    

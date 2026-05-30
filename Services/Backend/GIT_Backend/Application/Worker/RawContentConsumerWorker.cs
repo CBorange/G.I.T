@@ -17,62 +17,65 @@ namespace GIT_Backend.Application.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var db = _redis.GetDatabase();
-
-            _logger.LogInformation(
-                "Starting Redis stream consumer. StreamKey={StreamKey}, GroupName={GroupName}",
-                StreamKey,
-                GroupName);
-
-            await EnsureConsumerGroupAsync(db);
-
-            var consumerName = $"{Environment.MachineName}-{Guid.NewGuid():N}";
-            _logger.LogInformation("Redis stream consumer is polling. ConsumerName={ConsumerName}", consumerName);
-
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    var entries = await db.StreamReadGroupAsync(
-                        StreamKey,
-                        GroupName,
-                        consumerName,
-                        ">",
-                        count: 10);
+                var db = _redis.GetDatabase();
 
-                    if (entries.Length == 0)
+                _logger.LogInformation(
+                    "Starting Redis stream consumer. StreamKey={StreamKey}, GroupName={GroupName}",
+                    StreamKey,
+                    GroupName);
+
+                await EnsureConsumerGroupAsync(db);
+
+                var consumerName = $"{Environment.MachineName}-{Guid.NewGuid():N}";
+                _logger.LogInformation("Redis stream consumer is polling. ConsumerName={ConsumerName}", consumerName);
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    try
                     {
-                        await Task.Delay(1000, stoppingToken);
-                        continue;
-                    }
+                        var entries = await db.StreamReadGroupAsync(
+                            StreamKey,
+                            GroupName,
+                            consumerName,
+                            ">",
+                            count: 10);
 
-                    foreach (var entry in entries)
+                        if (entries.Length == 0)
+                        {
+                            await Task.Delay(1000, stoppingToken);
+                            continue;
+                        }
+
+                        foreach (var entry in entries)
+                        {
+                            try
+                            {
+                                await ProcessAsync(entry, stoppingToken);
+
+                                await db.StreamAcknowledgeAsync(StreamKey, GroupName, entry.Id);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex,
+                                    "Message processing failed. EntryId={EntryId}",
+                                    entry.Id);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {
-                        try
-                        {
-                            await ProcessAsync(entry, stoppingToken);
-
-                            await db.StreamAcknowledgeAsync(StreamKey, GroupName, entry.Id);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex,
-                                "Message processing failed. EntryId={EntryId}",
-                                entry.Id);
-                        }
+                        break;
                     }
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Redis polling failed.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Start Redis polling failed.");
 
-                    // reconnect storm 방지
-                    await Task.Delay(5000, stoppingToken);
-                }
+                // reconnect storm 방지
+                await Task.Delay(5000, stoppingToken);
             }
         }
 
@@ -98,10 +101,10 @@ namespace GIT_Backend.Application.Worker
                 x => x.Name.ToString(),
                 x => x.Value.ToString());
 
-            var articleUrl = values.GetValueOrDefault("article_url");
+            var source_url = values.GetValueOrDefault("source_url");
             var title = values.GetValueOrDefault("title");
 
-            _logger.LogInformation("Consumed article. Url={ArticleUrl}, Title={Title}", articleUrl, title);
+            _logger.LogInformation("Consumed article. Url={source_url}, Title={title}", source_url, title);
 
             // TODO: 데이터 검증
 

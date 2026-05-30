@@ -21,3 +21,5 @@ description: Crawler service development guidance for the G.I.T monorepo. Use wh
 
 ## 기술스택
 - Python 3.10+
+
+## 작업별 지침
