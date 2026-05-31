@@ -19,3 +19,8 @@
 
 ### RawContent
 - 크롤러가 수집한 원문 데이터 저장 테이블이다.
+- 동일한 source_url을 가진 데이터는 중복 저장할 수 없다.
+
+### AnalyzeJob
+- raw_content를 분석하기 위한 작업 상태를 저장하는 테이블이다.
+- raw_content와 1:1 관계이다. ai analyze 실행 시 마다 analyze_job에 작업 현황을 기록해야 한다.

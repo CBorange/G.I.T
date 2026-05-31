@@ -1,6 +1,7 @@
 from crawlers.base_crawler import BaseCrawler
-from crawlers.seoul_mediahub_cralwer import SeoulMediahubCrawler
-from helper.http_client import create_session
+from crawlers.seoul_mediahub_crawler import SeoulMediahubCrawler
+from helper.http_client import create_crawler_session
+from helper.redis_client import create_redis_client
 from models.source_provider import SourceProvider
 
 CRAWLER_BY_PROVIDER_CODE: dict[str, type[BaseCrawler]] = {
@@ -18,5 +19,6 @@ def create_crawler(source_provider: SourceProvider) -> BaseCrawler:
     return crawler_type(
         source_provider=source_provider,
         crawl_targets=source_provider.crawl_targets,
-        session=create_session(),
+        session=create_crawler_session(),
+        redis_client=create_redis_client(),
     )

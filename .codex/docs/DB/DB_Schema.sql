@@ -1,41 +1,4 @@
 
-CREATE TABLE " analyze_jobs"
-(
-  "id"                   uuid         NOT NULL,
-  "raw_contents_id"      uuid         NOT NULL,
-  "analyzer_provider_id" smallint     NOT NULL,
-  "prompt_policy_code"   varchar(100) NOT NULL,
-  "status"               varchar(20)  NOT NULL,
-  "attempt_count"        smallint     NOT NULL,
-  "max_atempt_count"     smallint    ,
-  "last_error"           text        ,
-  "last_running_at"      timestamptz ,
-  "ended_at"             timestamptz ,
-  PRIMARY KEY ("id")
-);
-
-COMMENT ON TABLE " analyze_jobs" IS '분석 작업';
-
-COMMENT ON COLUMN " analyze_jobs"."id" IS '기본키';
-
-COMMENT ON COLUMN " analyze_jobs"."raw_contents_id" IS '작업 대상 원문 ID';
-
-COMMENT ON COLUMN " analyze_jobs"."analyzer_provider_id" IS '분석 시점의 분석기 ID';
-
-COMMENT ON COLUMN " analyze_jobs"."prompt_policy_code" IS '분석 프롬프트 종류 코드(스냅샷)';
-
-COMMENT ON COLUMN " analyze_jobs"."status" IS '상태';
-
-COMMENT ON COLUMN " analyze_jobs"."attempt_count" IS '분석 시도 횟수';
-
-COMMENT ON COLUMN " analyze_jobs"."max_atempt_count" IS '최대 재시도 횟수';
-
-COMMENT ON COLUMN " analyze_jobs"."last_error" IS '마지막 실패 사유';
-
-COMMENT ON COLUMN " analyze_jobs"."last_running_at" IS '마지막 시도 일시';
-
-COMMENT ON COLUMN " analyze_jobs"."ended_at" IS '최종 성공/실패 시각';
-
 CREATE TABLE "analysis_route"
 (
   "id"                   smallint     NOT NULL GENERATED ALWAYS AS IDENTITY,
@@ -66,6 +29,43 @@ COMMENT ON COLUMN "analysis_route"."is_enabled" IS '라우팅 정책 활성화 �
 COMMENT ON COLUMN "analysis_route"."created_at" IS '생성일';
 
 COMMENT ON COLUMN "analysis_route"."updated_at" IS '수정일';
+
+CREATE TABLE "analyze_job"
+(
+  "id"                   uuid         NOT NULL,
+  "raw_contents_id"      uuid         NOT NULL,
+  "analyzer_provider_id" smallint     NOT NULL,
+  "prompt_policy_code"   varchar(100) NOT NULL,
+  "status"               varchar(20)  NOT NULL,
+  "attempt_count"        smallint     NOT NULL,
+  "max_atempt_count"     smallint    ,
+  "last_error"           text        ,
+  "last_running_at"      timestamptz ,
+  "ended_at"             timestamptz ,
+  PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "analyze_job" IS '분석 작업';
+
+COMMENT ON COLUMN "analyze_job"."id" IS '기본키';
+
+COMMENT ON COLUMN "analyze_job"."raw_contents_id" IS '작업 대상 원문 ID';
+
+COMMENT ON COLUMN "analyze_job"."analyzer_provider_id" IS '분석 시점의 분석기 ID';
+
+COMMENT ON COLUMN "analyze_job"."prompt_policy_code" IS '분석 프롬프트 종류 코드(스냅샷)';
+
+COMMENT ON COLUMN "analyze_job"."status" IS '상태';
+
+COMMENT ON COLUMN "analyze_job"."attempt_count" IS '분석 시도 횟수';
+
+COMMENT ON COLUMN "analyze_job"."max_atempt_count" IS '최대 재시도 횟수';
+
+COMMENT ON COLUMN "analyze_job"."last_error" IS '마지막 실패 사유';
+
+COMMENT ON COLUMN "analyze_job"."last_running_at" IS '마지막 시도 일시';
+
+COMMENT ON COLUMN "analyze_job"."ended_at" IS '최종 성공/실패 시각';
 
 CREATE TABLE "analyzed_contents"
 (
@@ -330,24 +330,19 @@ ALTER TABLE "analysis_route"
     REFERENCES "source_provider" ("id");
 
 ALTER TABLE "analyzed_contents"
-  ADD CONSTRAINT "FK_ analyze_jobs_TO_analyzed_contents"
+  ADD CONSTRAINT "FK_analyze_job_TO_analyzed_contents"
     FOREIGN KEY ("analyze_job_id")
-    REFERENCES " analyze_jobs" ("id");
+    REFERENCES "analyze_job" ("id");
 
-ALTER TABLE " analyze_jobs"
-  ADD CONSTRAINT "FK_raw_contents_TO_ analyze_jobs"
+ALTER TABLE "analyze_job"
+  ADD CONSTRAINT "FK_raw_contents_TO_analyze_job"
     FOREIGN KEY ("raw_contents_id")
     REFERENCES "raw_contents" ("id");
 
-ALTER TABLE " analyze_jobs"
-  ADD CONSTRAINT "FK_analyzer_provider_TO_ analyze_jobs"
+ALTER TABLE "analyze_job"
+  ADD CONSTRAINT "FK_analyzer_provider_TO_analyze_job"
     FOREIGN KEY ("analyzer_provider_id")
     REFERENCES "analyzer_provider" ("id");
-
-ALTER TABLE "analyzed_contents"
-  ADD CONSTRAINT "FK_raw_contents_TO_analyzed_contents"
-    FOREIGN KEY ("raw_contents_id")
-    REFERENCES "raw_contents" ("id");
 
 ALTER TABLE "analyzed_contents"
   ADD CONSTRAINT "FK_source_category_TO_analyzed_contents"
@@ -363,6 +358,11 @@ ALTER TABLE "analysis_route"
   ADD CONSTRAINT "FK_source_category_TO_analysis_route"
     FOREIGN KEY ("source_category_id")
     REFERENCES "source_category" ("id");
+
+ALTER TABLE "analyzed_contents"
+  ADD CONSTRAINT "FK_raw_contents_TO_analyzed_contents"
+    FOREIGN KEY ("raw_contents_id")
+    REFERENCES "raw_contents" ("id");
 
 CREATE UNIQUE INDEX "UQ_analysis_route_source_analyzer"
   ON "analysis_route" ("source_provider_id" ASC, "analyzer_provider_id" ASC);

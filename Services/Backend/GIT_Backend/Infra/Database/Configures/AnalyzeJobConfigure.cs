@@ -8,7 +8,7 @@ public class AnalyzeJobConfigure : IEntityTypeConfiguration<AnalyzeJob>
 {
     public void Configure(EntityTypeBuilder<AnalyzeJob> entity)
     {
-        entity.ToTable(" analyze_jobs");
+        entity.ToTable("analyze_job");
 
         entity.HasKey(e => e.Id);
 

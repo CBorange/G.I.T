@@ -1,3 +1,6 @@
+using System.Globalization;
+using GIT_Backend.Application.DTO;
+using GIT_Backend.Application.Service;
 using StackExchange.Redis;
 
 namespace GIT_Backend.Application.Worker
@@ -7,11 +10,16 @@ namespace GIT_Backend.Application.Worker
         private const string StreamKey = "raw-content-events";
         private const string GroupName = "backend-raw-content-group";
         private readonly IConnectionMultiplexer _redis;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<RawContentConsumerWorker> _logger;
 
-        public RawContentConsumerWorker(IConnectionMultiplexer redis, ILogger<RawContentConsumerWorker> logger)
+        public RawContentConsumerWorker(
+            IConnectionMultiplexer redis,
+            IServiceScopeFactory scopeFactory,
+            ILogger<RawContentConsumerWorker> logger)
         {
             _redis = redis;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
@@ -95,20 +103,82 @@ namespace GIT_Backend.Application.Worker
             }
         }
 
-        private Task ProcessAsync(StreamEntry entry, CancellationToken cancellationToken)
+        private async Task ProcessAsync(StreamEntry entry, CancellationToken cancellationToken)
         {
             var values = entry.Values.ToDictionary(
                 x => x.Name.ToString(),
                 x => x.Value.ToString());
 
-            var source_url = values.GetValueOrDefault("source_url");
-            var title = values.GetValueOrDefault("title");
+            var message = ParseMessage(values);
 
-            _logger.LogInformation("Consumed article. Url={source_url}, Title={title}", source_url, title);
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var crawlerService = scope.ServiceProvider.GetRequiredService<CrawlerService>();
+            var result = await crawlerService.SaveRawContentAsync(message, cancellationToken);
 
-            // TODO: 데이터 검증
+            if (result.Created)
+            {
+                _logger.LogInformation(
+                    "Saved raw content and analyze job. EntryId={EntryId}, RawContentId={RawContentId}, AnalyzeJobId={AnalyzeJobId}, Url={SourceUrl}, Title={Title}",
+                    entry.Id,
+                    result.RawContentId,
+                    result.AnalyzeJobId,
+                    message.SourceUrl,
+                    message.Title);
+                return;
+            }
 
-            return Task.CompletedTask;
+            _logger.LogInformation(
+                "Raw content already exists. EntryId={EntryId}, RawContentId={RawContentId}, Url={SourceUrl}, Title={Title}",
+                entry.Id,
+                result.RawContentId,
+                message.SourceUrl,
+                message.Title);
+        }
+
+        private static CrawlerRawContentMessage ParseMessage(Dictionary<string, string> values)
+        {
+            return new CrawlerRawContentMessage(
+                Id: Guid.Parse(GetRequiredValue(values, "id")),
+                CrawlTargetId: int.Parse(GetRequiredValue(values, "crawl_target_id"), CultureInfo.InvariantCulture),
+                SourceUrl: GetRequiredValue(values, "source_url"),
+                ContentId: GetOptionalValue(values, "content_id"),
+                Author: GetOptionalValue(values, "author"),
+                PublishedAt: ParseOptionalDateTimeOffset(values, "published_at"),
+                Title: GetRequiredValue(values, "title"),
+                Body: GetOptionalValue(values, "body"),
+                RawPayloadJson: GetOptionalValue(values, "raw_payload_json"),
+                CrawledAt: DateTimeOffset.Parse(
+                    GetRequiredValue(values, "crawled_at"),
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind));
+        }
+
+        private static string GetRequiredValue(Dictionary<string, string> values, string key)
+        {
+            if (!values.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException($"Required Redis stream field is missing. field={key}");
+            }
+
+            return value;
+        }
+
+        private static string? GetOptionalValue(Dictionary<string, string> values, string key)
+        {
+            return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+                ? value
+                : null;
+        }
+
+        private static DateTimeOffset? ParseOptionalDateTimeOffset(Dictionary<string, string> values, string key)
+        {
+            var value = GetOptionalValue(values, key);
+            if (value is null)
+            {
+                return null;
+            }
+
+            return DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
         }
     }
 }

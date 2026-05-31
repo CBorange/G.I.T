@@ -37,6 +37,7 @@ def create_crawler_session() -> Session:
                 "*/*;q=0.8"
             ),
             "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         }
     )
     

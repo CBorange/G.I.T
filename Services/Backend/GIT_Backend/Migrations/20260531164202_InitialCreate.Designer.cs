@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GIT_Backend.Migrations
 {
     [DbContext(typeof(GITDBContext))]
-    [Migration("20260524185110_InitialCreate")]
+    [Migration("20260531164202_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -48,7 +48,17 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_enabled");
 
-                    b.Property<short>("SourceProviderId")
+                    b.Property<string>("PromptPolicyCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("prompt_policy_code");
+
+                    b.Property<short?>("SourceCategoryId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("source_category_id");
+
+                    b.Property<short?>("SourceProviderId")
                         .HasColumnType("smallint")
                         .HasColumnName("source_provider_id");
 
@@ -62,11 +72,73 @@ namespace GIT_Backend.Migrations
                     b.HasIndex("AnalyzerProviderId")
                         .HasDatabaseName("ix_analysis_route_analyzer_provider_id");
 
+                    b.HasIndex("SourceCategoryId")
+                        .HasDatabaseName("ix_analysis_route_source_category_id");
+
                     b.HasIndex("SourceProviderId", "AnalyzerProviderId")
                         .IsUnique()
                         .HasDatabaseName("UQ_analysis_route_source_analyzer");
 
                     b.ToTable("analysis_route", (string)null);
+                });
+
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzeJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<short>("AnalyzerProviderId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("analyzer_provider_id");
+
+                    b.Property<short>("AttemptCount")
+                        .HasColumnType("smallint")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTimeOffset?>("LastRunningAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_running_at");
+
+                    b.Property<short?>("MaxAttemptCount")
+                        .HasColumnType("smallint")
+                        .HasColumnName("max_atempt_count");
+
+                    b.Property<string>("PromptPolicyCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("prompt_policy_code");
+
+                    b.Property<Guid>("RawContentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("raw_contents_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_analyze_job");
+
+                    b.HasIndex("AnalyzerProviderId")
+                        .HasDatabaseName("ix_analyze_job_analyzer_provider_id");
+
+                    b.HasIndex("RawContentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analyze_job_raw_content_id");
+
+                    b.ToTable("analyze_job", (string)null);
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzedContent", b =>
@@ -83,6 +155,10 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("analysis_payload_json");
 
+                    b.Property<Guid>("AnalyzeJobId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("analyze_job_id");
+
                     b.Property<DateTimeOffset>("AnalyzedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analyzed_at");
@@ -95,6 +171,15 @@ namespace GIT_Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("body_summary");
+
+                    b.Property<decimal>("Confidence")
+                        .HasColumnType("numeric(5,4)")
+                        .HasColumnName("confidence");
+
+                    b.Property<string>("ConfidenceReason")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("confidence_reason");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -125,11 +210,19 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("text")
                         .HasColumnName("title_summary");
 
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
                     b.HasKey("Id")
                         .HasName("pk_analyzed_contents");
 
                     b.HasIndex("ActualCategoryId")
                         .HasDatabaseName("ix_analyzed_contents_actual_category_id");
+
+                    b.HasIndex("AnalyzeJobId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analyzed_contents_analyze_job_id");
 
                     b.HasIndex("AnalyzerProviderId")
                         .HasDatabaseName("ix_analyzed_contents_analyzer_provider_id");
@@ -174,6 +267,10 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_enabled");
 
+                    b.Property<DateTimeOffset?>("LastRunningAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_running_at");
+
                     b.Property<string>("ModelName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -185,12 +282,6 @@ namespace GIT_Backend.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
-
-                    b.Property<string>("ProviderType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("provider_type");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -204,6 +295,80 @@ namespace GIT_Backend.Migrations
                         .HasDatabaseName("ix_analyzer_provider_code");
 
                     b.ToTable("analyzer_provider", (string)null);
+                });
+
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.CrawlTarget", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("EntryUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("entry_url");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastRunningAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_running_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("RequestDelayMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("request_delay_ms");
+
+                    b.Property<short>("SourceCategoryId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("source_category_id");
+
+                    b.Property<short>("SourceProviderId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("source_provider_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_crawl_target");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_crawl_target_code");
+
+                    b.HasIndex("SourceCategoryId")
+                        .HasDatabaseName("ix_crawl_target_source_category_id");
+
+                    b.HasIndex("SourceProviderId")
+                        .HasDatabaseName("ix_crawl_target_source_provider_id");
+
+                    b.ToTable("crawl_target", (string)null);
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.RawContent", b =>
@@ -222,10 +387,13 @@ namespace GIT_Backend.Migrations
                         .HasColumnName("body");
 
                     b.Property<string>("ContentId")
-                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("text")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("content_id");
+
+                    b.Property<int>("CrawlTargetId")
+                        .HasColumnType("integer")
+                        .HasColumnName("crawl_target_id");
 
                     b.Property<DateTimeOffset>("CrawledAt")
                         .HasColumnType("timestamp with time zone")
@@ -237,10 +405,6 @@ namespace GIT_Backend.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<short>("ExpectCategoryId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("expect_category_id");
-
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
@@ -248,10 +412,6 @@ namespace GIT_Backend.Migrations
                     b.Property<string>("RawPayloadJson")
                         .HasColumnType("jsonb")
                         .HasColumnName("raw_payload_json");
-
-                    b.Property<short>("SourceProviderId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("source_provider_id");
 
                     b.Property<string>("SourceUrl")
                         .IsRequired()
@@ -270,11 +430,8 @@ namespace GIT_Backend.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_raw_contents_content_id");
 
-                    b.HasIndex("ExpectCategoryId")
-                        .HasDatabaseName("ix_raw_contents_expect_category_id");
-
-                    b.HasIndex("SourceProviderId")
-                        .HasDatabaseName("ix_raw_contents_source_provider_id");
+                    b.HasIndex("CrawlTargetId")
+                        .HasDatabaseName("ix_raw_contents_crawl_target_id");
 
                     b.HasIndex("SourceUrl")
                         .IsUnique()
@@ -309,6 +466,12 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("description");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -327,72 +490,6 @@ namespace GIT_Backend.Migrations
                         .HasDatabaseName("ix_source_category_code");
 
                     b.ToTable("source_category", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = (short)1,
-                            Code = "culture",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "문화 관련 이슈",
-                            Name = "문화"
-                        },
-                        new
-                        {
-                            Id = (short)2,
-                            Code = "economy",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "경제 관련 이슈",
-                            Name = "경제"
-                        },
-                        new
-                        {
-                            Id = (short)3,
-                            Code = "welfare",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "복지 관련 이슈",
-                            Name = "복지"
-                        },
-                        new
-                        {
-                            Id = (short)4,
-                            Code = "transport",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "교통 관련 이슈",
-                            Name = "교통"
-                        },
-                        new
-                        {
-                            Id = (short)5,
-                            Code = "environment",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "환경 관련 이슈",
-                            Name = "환경"
-                        },
-                        new
-                        {
-                            Id = (short)6,
-                            Code = "housing",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "주택 관련 이슈",
-                            Name = "주택"
-                        },
-                        new
-                        {
-                            Id = (short)7,
-                            Code = "safety",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "안전 관련 이슈",
-                            Name = "안전"
-                        },
-                        new
-                        {
-                            Id = (short)8,
-                            Code = "administration",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "행정 관련 이슈",
-                            Name = "행정"
-                        });
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.SourceProvider", b =>
@@ -415,11 +512,6 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("code");
 
-                    b.Property<string>("CrawlUrl")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("crawl_url");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -431,19 +523,15 @@ namespace GIT_Backend.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("description");
 
-                    b.Property<short>("ExpectCategoryId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("expect_category_id");
-
-                    b.Property<int>("IntervalMin")
-                        .HasColumnType("integer")
-                        .HasColumnName("interval_min");
-
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastRunningAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_running_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -466,9 +554,6 @@ namespace GIT_Backend.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_source_provider_code");
 
-                    b.HasIndex("ExpectCategoryId")
-                        .HasDatabaseName("ix_source_provider_expect_category_id");
-
                     b.ToTable("source_provider", (string)null);
                 });
 
@@ -481,16 +566,44 @@ namespace GIT_Backend.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_analyzer_provider_TO_analysis_route");
 
+                    b.HasOne("GIT_Backend.Domain.Entity.SourceCategory", "SourceCategory")
+                        .WithMany("AnalysisRoutes")
+                        .HasForeignKey("SourceCategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_source_category_TO_analysis_route");
+
                     b.HasOne("GIT_Backend.Domain.Entity.SourceProvider", "SourceProvider")
                         .WithMany("AnalysisRoutes")
                         .HasForeignKey("SourceProviderId")
                         .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
                         .HasConstraintName("FK_source_provider_TO_analysis_route");
 
                     b.Navigation("AnalyzerProvider");
 
+                    b.Navigation("SourceCategory");
+
                     b.Navigation("SourceProvider");
+                });
+
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzeJob", b =>
+                {
+                    b.HasOne("GIT_Backend.Domain.Entity.AnalyzerProvider", "AnalyzerProvider")
+                        .WithMany("AnalyzeJobs")
+                        .HasForeignKey("AnalyzerProviderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_analyzer_provider_TO_ analyze_jobs");
+
+                    b.HasOne("GIT_Backend.Domain.Entity.RawContent", "RawContent")
+                        .WithOne("AnalyzeJob")
+                        .HasForeignKey("GIT_Backend.Domain.Entity.AnalyzeJob", "RawContentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_raw_contents_TO_ analyze_jobs");
+
+                    b.Navigation("AnalyzerProvider");
+
+                    b.Navigation("RawContent");
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzedContent", b =>
@@ -501,6 +614,13 @@ namespace GIT_Backend.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_source_category_TO_analyzed_contents");
+
+                    b.HasOne("GIT_Backend.Domain.Entity.AnalyzeJob", "AnalyzeJob")
+                        .WithOne("AnalyzedContent")
+                        .HasForeignKey("GIT_Backend.Domain.Entity.AnalyzedContent", "AnalyzeJobId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_ analyze_jobs_TO_analyzed_contents");
 
                     b.HasOne("GIT_Backend.Domain.Entity.AnalyzerProvider", "AnalyzerProvider")
                         .WithMany("AnalyzedContents")
@@ -518,70 +638,89 @@ namespace GIT_Backend.Migrations
 
                     b.Navigation("ActualCategory");
 
+                    b.Navigation("AnalyzeJob");
+
                     b.Navigation("AnalyzerProvider");
 
                     b.Navigation("RawContent");
                 });
 
-            modelBuilder.Entity("GIT_Backend.Domain.Entity.RawContent", b =>
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.CrawlTarget", b =>
                 {
-                    b.HasOne("GIT_Backend.Domain.Entity.SourceCategory", "ExpectCategory")
-                        .WithMany("RawContents")
-                        .HasForeignKey("ExpectCategoryId")
+                    b.HasOne("GIT_Backend.Domain.Entity.SourceCategory", "SourceCategory")
+                        .WithMany("CrawlTargets")
+                        .HasForeignKey("SourceCategoryId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_source_category_TO_raw_contents");
+                        .HasConstraintName("FK_source_category_TO_crawl_target");
 
                     b.HasOne("GIT_Backend.Domain.Entity.SourceProvider", "SourceProvider")
-                        .WithMany("RawContents")
+                        .WithMany("CrawlTargets")
                         .HasForeignKey("SourceProviderId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_source_provider_TO_raw_contents");
+                        .HasConstraintName("FK_source_provider_TO_crawl_target");
 
-                    b.Navigation("ExpectCategory");
+                    b.Navigation("SourceCategory");
 
                     b.Navigation("SourceProvider");
                 });
 
-            modelBuilder.Entity("GIT_Backend.Domain.Entity.SourceProvider", b =>
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.RawContent", b =>
                 {
-                    b.HasOne("GIT_Backend.Domain.Entity.SourceCategory", "ExpectCategory")
-                        .WithMany("SourceProviders")
-                        .HasForeignKey("ExpectCategoryId")
+                    b.HasOne("GIT_Backend.Domain.Entity.CrawlTarget", "CrawlTarget")
+                        .WithMany("RawContents")
+                        .HasForeignKey("CrawlTargetId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_source_category_TO_source_provider");
+                        .HasConstraintName("FK_crawl_target_TO_raw_contents");
 
-                    b.Navigation("ExpectCategory");
+                    b.Navigation("CrawlTarget");
+                });
+
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzeJob", b =>
+                {
+                    b.Navigation("AnalyzedContent")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzerProvider", b =>
                 {
                     b.Navigation("AnalysisRoutes");
 
+                    b.Navigation("AnalyzeJobs");
+
                     b.Navigation("AnalyzedContents");
+                });
+
+            modelBuilder.Entity("GIT_Backend.Domain.Entity.CrawlTarget", b =>
+                {
+                    b.Navigation("RawContents");
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.RawContent", b =>
                 {
-                    b.Navigation("AnalyzedContent");
+                    b.Navigation("AnalyzeJob")
+                        .IsRequired();
+
+                    b.Navigation("AnalyzedContent")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.SourceCategory", b =>
                 {
+                    b.Navigation("AnalysisRoutes");
+
                     b.Navigation("AnalyzedContents");
 
-                    b.Navigation("RawContents");
-
-                    b.Navigation("SourceProviders");
+                    b.Navigation("CrawlTargets");
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.SourceProvider", b =>
                 {
                     b.Navigation("AnalysisRoutes");
 
-                    b.Navigation("RawContents");
+                    b.Navigation("CrawlTargets");
                 });
 #pragma warning restore 612, 618
         }

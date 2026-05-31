@@ -126,16 +126,16 @@ namespace GIT_Backend.Migrations
                         .HasColumnName("status");
 
                     b.HasKey("Id")
-                        .HasName("pk_analyze_jobs");
+                        .HasName("pk_analyze_job");
 
                     b.HasIndex("AnalyzerProviderId")
-                        .HasDatabaseName("ix_analyze_jobs_analyzer_provider_id");
+                        .HasDatabaseName("ix_analyze_job_analyzer_provider_id");
 
                     b.HasIndex("RawContentId")
                         .IsUnique()
-                        .HasDatabaseName("ix_analyze_jobs_raw_content_id");
+                        .HasDatabaseName("ix_analyze_job_raw_content_id");
 
-                    b.ToTable(" analyze_jobs", (string)null);
+                    b.ToTable("analyze_job", (string)null);
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.AnalyzedContent", b =>
@@ -487,80 +487,6 @@ namespace GIT_Backend.Migrations
                         .HasDatabaseName("ix_source_category_code");
 
                     b.ToTable("source_category", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = (short)1,
-                            Code = "culture",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "문화 관련 이슈",
-                            IsActive = true,
-                            Name = "문화"
-                        },
-                        new
-                        {
-                            Id = (short)2,
-                            Code = "economy",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "경제 관련 이슈",
-                            IsActive = true,
-                            Name = "경제"
-                        },
-                        new
-                        {
-                            Id = (short)3,
-                            Code = "welfare",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "복지 관련 이슈",
-                            IsActive = true,
-                            Name = "복지"
-                        },
-                        new
-                        {
-                            Id = (short)4,
-                            Code = "transport",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "교통 관련 이슈",
-                            IsActive = true,
-                            Name = "교통"
-                        },
-                        new
-                        {
-                            Id = (short)5,
-                            Code = "environment",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "환경 관련 이슈",
-                            IsActive = true,
-                            Name = "환경"
-                        },
-                        new
-                        {
-                            Id = (short)6,
-                            Code = "housing",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "주택 관련 이슈",
-                            IsActive = true,
-                            Name = "주택"
-                        },
-                        new
-                        {
-                            Id = (short)7,
-                            Code = "safety",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "안전 관련 이슈",
-                            IsActive = true,
-                            Name = "안전"
-                        },
-                        new
-                        {
-                            Id = (short)8,
-                            Code = "administration",
-                            CreatedAt = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "행정 관련 이슈",
-                            IsActive = true,
-                            Name = "행정"
-                        });
                 });
 
             modelBuilder.Entity("GIT_Backend.Domain.Entity.SourceProvider", b =>
