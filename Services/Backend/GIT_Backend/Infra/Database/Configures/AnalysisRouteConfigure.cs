@@ -33,6 +33,10 @@ public class AnalysisRouteConfigure : IEntityTypeConfiguration<AnalysisRoute>
         entity.Property(e => e.IsEnabled)
             .IsRequired();
 
+        entity.Property(e => e.IsDefault)
+            .IsRequired()
+            .HasDefaultValue("false");
+
         entity.Property(e => e.CreatedAt)
             .HasColumnType("timestamp with time zone")
             .IsRequired()

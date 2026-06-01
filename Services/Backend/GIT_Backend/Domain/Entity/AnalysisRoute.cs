@@ -13,6 +13,7 @@ public class AnalysisRoute
     public string PromptPolicyCode { get; set; } = string.Empty;
 
     public bool IsEnabled { get; set; }
+    public bool IsDefault { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

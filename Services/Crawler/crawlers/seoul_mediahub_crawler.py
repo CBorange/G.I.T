@@ -22,19 +22,13 @@ SEOUL_TIMEZONE = timezone(timedelta(hours=9))
 
 class SeoulMediahubCrawler(BaseCrawler):
     def run(self) -> None:
-        active_targets = [
-            crawl_target
-            for crawl_target in self.crawl_targets
-            if crawl_target.is_active
-        ]
-
         logger.info(
             "Crawler requested. provider=%s target_count=%s",
             self.source_provider.code,
-            len(active_targets),
+            len(self.crawl_targets),
         )
 
-        for crawl_target in active_targets:
+        for crawl_target in self.crawl_targets:
             self._crawl_target(crawl_target)
 
     def _crawl_target(self, crawl_target: CrawlTarget) -> None:

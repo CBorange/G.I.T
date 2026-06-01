@@ -70,15 +70,30 @@ public class CrawlerService(GITDBContext dbContext)
                 $"CrawlTarget not found. crawl_target_id={message.CrawlTargetId}");
         }
 
+        // AnalysisRoute 테이블에서 RawContents 발행한 CrawlTarget과 연결되는 Route가 있는지 검증한다.
+        // AnalyzeJob 데이터 생성 -> AI 분석 요청과 도메인적으로 같음, Redis Event 발행과 별개로 AnalyzeJob이 생성되어 있으면 분석 예약인것이므로
+        // 이 단계에서 AnalysisRoute를 Check 하는것
         var analysisRoute = await dbContext.AnalysisRoutes
             .AsNoTracking()
             .Where(route =>
                 route.IsEnabled &&
                 route.AnalyzerProvider.IsEnabled &&
-                (route.SourceProviderId == crawlTarget.SourceProviderId || route.SourceProviderId == null) &&
-                (route.SourceCategoryId == crawlTarget.SourceCategoryId || route.SourceCategoryId == null))
-            .OrderByDescending(route => route.SourceProviderId == crawlTarget.SourceProviderId)
+                (
+                    (route.SourceProviderId == crawlTarget.SourceProviderId &&
+                        route.SourceCategoryId == crawlTarget.SourceCategoryId)
+                    ||
+                    route.SourceProviderId == crawlTarget.SourceProviderId
+                    ||
+                    route.SourceCategoryId == crawlTarget.SourceCategoryId
+                    ||
+                    route.IsDefault
+                ))
+            .OrderByDescending(route =>
+                route.SourceProviderId == crawlTarget.SourceProviderId &&
+                route.SourceCategoryId == crawlTarget.SourceCategoryId)
+            .ThenByDescending(route => route.SourceProviderId == crawlTarget.SourceProviderId)
             .ThenByDescending(route => route.SourceCategoryId == crawlTarget.SourceCategoryId)
+            .ThenByDescending(route => route.IsDefault)
             .ThenBy(route => route.Id)
             .Select(route => new
             {

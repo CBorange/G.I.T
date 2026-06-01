@@ -5,18 +5,15 @@ using StackExchange.Redis;
 
 namespace GIT_Backend.Application.Worker
 {
-    public sealed class RawContentConsumerWorker : BackgroundService
+    public sealed class CrawlerWorker : BackgroundService
     {
         private const string StreamKey = "raw-content-events";
         private const string GroupName = "backend-raw-content-group";
         private readonly IConnectionMultiplexer _redis;
+        private readonly ILogger<CrawlerWorker> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<RawContentConsumerWorker> _logger;
 
-        public RawContentConsumerWorker(
-            IConnectionMultiplexer redis,
-            IServiceScopeFactory scopeFactory,
-            ILogger<RawContentConsumerWorker> logger)
+        public CrawlerWorker(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory, ILogger<CrawlerWorker> logger)
         {
             _redis = redis;
             _scopeFactory = scopeFactory;
@@ -56,12 +53,13 @@ namespace GIT_Backend.Application.Worker
                             continue;
                         }
 
+                        await using var scope = _scopeFactory.CreateAsyncScope();
+                        var crawlerService = scope.ServiceProvider.GetRequiredService<CrawlerService>();
                         foreach (var entry in entries)
                         {
                             try
                             {
-                                await ProcessAsync(entry, stoppingToken);
-
+                                await ProcessAsync(crawlerService, entry, stoppingToken);
                                 await db.StreamAcknowledgeAsync(StreamKey, GroupName, entry.Id);
                             }
                             catch (Exception ex)
@@ -103,16 +101,13 @@ namespace GIT_Backend.Application.Worker
             }
         }
 
-        private async Task ProcessAsync(StreamEntry entry, CancellationToken cancellationToken)
+        private async Task ProcessAsync(CrawlerService crawlerService, StreamEntry entry, CancellationToken cancellationToken)
         {
             var values = entry.Values.ToDictionary(
                 x => x.Name.ToString(),
                 x => x.Value.ToString());
 
             var message = ParseMessage(values);
-
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var crawlerService = scope.ServiceProvider.GetRequiredService<CrawlerService>();
             var result = await crawlerService.SaveRawContentAsync(message, cancellationToken);
 
             if (result.Created)

@@ -6,6 +6,7 @@ description: Backend service development guidance for the G.I.T monorepo. Use wh
 ## 문서 참조 순서
 아래 순서로 문서를 먼저 참조하고 이 skill 문서를 읽으시오.
 1. `Root/AGENTS.md`
+2. `docs/Backend/aspnet_style.md`
 2. 이 스킬 문서
 
 작업 내용에 따라 작업 수행 전에 연관된 문서를 먼저 참조하시오.

@@ -34,7 +34,7 @@ try
 
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         ConnectionMultiplexer.Connect(redisConnectionString));
-    builder.Services.AddHostedService<RawContentConsumerWorker>();
+    builder.Services.AddHostedService<CrawlerWorker>();
 
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();

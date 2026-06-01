@@ -9,6 +9,7 @@ CREATE TABLE "analysis_route"
   "is_enabled"           boolean      NOT NULL,
   "created_at"           timestamptz  NOT NULL,
   "updated_at"           timestamptz ,
+  "is_default"           boolean      NOT NULL DEFAULT false,
   PRIMARY KEY ("id")
 );
 
@@ -29,6 +30,8 @@ COMMENT ON COLUMN "analysis_route"."is_enabled" IS '라우팅 정책 활성화 �
 COMMENT ON COLUMN "analysis_route"."created_at" IS '생성일';
 
 COMMENT ON COLUMN "analysis_route"."updated_at" IS '수정일';
+
+COMMENT ON COLUMN "analysis_route"."is_default" IS '기본 라우터';
 
 CREATE TABLE "analyze_job"
 (
