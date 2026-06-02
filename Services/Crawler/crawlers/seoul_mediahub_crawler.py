@@ -8,6 +8,7 @@ from requests import RequestException
 from config.environment_loader import app_config
 from crawlers.base_crawler import BaseCrawler
 from service.seoul_mediahub_parser import (
+    build_article_list_payload,
     parse_article,
     parse_article_links,
     parse_last_page,
@@ -90,7 +91,11 @@ class SeoulMediahubCrawler(BaseCrawler):
         crawl_target: CrawlTarget,
         page_no: int,
     ) -> str:
-        payload = self._build_article_list_payload(crawl_target, page_no)
+        payload = build_article_list_payload(
+            crawl_target,
+            page_no,
+            self.crawl_date_range,
+        )
         response = self.session.post(
             crawl_target.entry_url,
             data=payload,
@@ -153,22 +158,3 @@ class SeoulMediahubCrawler(BaseCrawler):
 
         time.sleep(delay_ms / 1000)
 
-    def _build_article_list_payload(
-        self,
-        crawl_target: CrawlTarget,
-        page_no: int,
-    ) -> dict[str, str]:
-        return {
-            "search_pageNo": str(page_no),
-            "search_orderBy": "articlePubDt",
-            "search_categoryCd": crawl_target.code,
-            "search_isCategoryNews": "Y",
-            "search_isNews": "Y",
-            "search_isExplainNews": "N",
-            "search_isFactBriefing": "N",
-            "newsListType": "normal",
-            "search_startDate": "",
-            "search_endDate": "",
-            "search_searchType": "",
-            "search_keyword": "",
-        }

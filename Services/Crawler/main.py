@@ -3,10 +3,9 @@ import time
 
 from requests import RequestException
 
-from config.arguments_loader import load_arguments
+from config.arguments_loader import load_arguments, resolve_crawl_date_range
 from config.environment_loader import app_config
 from config.log_config import configure_logging
-from crawlers.base_crawler import BaseCrawler
 from helper.http_client import create_session
 from models.source_provider import SourceProvider
 from service.crawler_factory import create_crawler
@@ -14,7 +13,11 @@ from service.crawler_factory import create_crawler
 
 def load_source_providers() -> list[SourceProvider]:
     logger = logging.getLogger(__name__)
-    session = create_session()
+    session = create_session(
+        headers={
+            "X-Internal-Api-Key": app_config.internal_api_key,
+        }
+    )
     url = (
         f"{app_config.backend_api_base_url.rstrip('/')}"
         "/crawler/source-providers"
@@ -65,7 +68,11 @@ def main() -> None:
                 source_providers=source_providers,
                 provider_code=args.provider,
             )
-            crawler = create_crawler(source_provider)
+            crawl_date_range = resolve_crawl_date_range(
+                lookback=args.lookback,
+                from_date=args.from_date,
+            )
+            crawler = create_crawler(source_provider, crawl_date_range)
             crawler.run()
         except Exception as e:
             logger.error(f"Error occurred during crawler running once: {e}")
@@ -75,10 +82,14 @@ def main() -> None:
     while True:
         try:
             logger.info("Starting crawler iteration.")
+            crawl_date_range = resolve_crawl_date_range(
+                lookback=args.lookback,
+                from_date=args.from_date,
+            )
             source_providers = load_source_providers()
 
             for source_provider in source_providers:
-                crawler = create_crawler(source_provider)
+                crawler = create_crawler(source_provider, crawl_date_range)
                 crawler.run()
 
             logger.info("Crawler iteration completed.")

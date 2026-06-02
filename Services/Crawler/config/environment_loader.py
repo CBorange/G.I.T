@@ -18,6 +18,7 @@ def require_env(name: str) -> str:
 class AppConfig:
     backend_api_base_url: str
     backend_api_timeout_sec: int
+    internal_api_key: str
     redis_host: str
     redis_port: int
     redis_password: str
@@ -31,6 +32,7 @@ app_config = AppConfig(
     backend_api_timeout_sec=int(
         os.getenv("BACKEND_API_TIMEOUT_SEC") or require_env("BACKEND_API_TIMEOUT_SECONDS")
     ),
+    internal_api_key=require_env("Internal_API_Key"),
     redis_host=require_env("Redis_Host"),
     redis_port=int(require_env("Redis_Port")),
     redis_password=require_env("Redis_Password"),

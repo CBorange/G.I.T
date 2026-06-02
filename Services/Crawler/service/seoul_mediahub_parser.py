@@ -5,9 +5,32 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
+from models.crawl_date_range import CrawlDateRange
 from models.raw_content_result import ArticleLink, RawContentResult
+from models.source_provider import CrawlTarget
 
 SEOUL_TIMEZONE = timezone(timedelta(hours=9))
+
+
+def build_article_list_payload(
+    crawl_target: CrawlTarget,
+    page_no: int,
+    crawl_date_range: CrawlDateRange,
+) -> dict[str, str]:
+    return {
+        "search_pageNo": str(page_no),
+        "search_orderBy": "articlePubDt",
+        "search_categoryCd": crawl_target.code,
+        "search_isCategoryNews": "Y",
+        "search_isNews": "Y",
+        "search_isExplainNews": "N",
+        "search_isFactBriefing": "N",
+        "newsListType": "normal",
+        "search_startDate": crawl_date_range.start_date_text(),
+        "search_endDate": crawl_date_range.end_date_text(),
+        "search_searchType": "",
+        "search_keyword": "",
+    }
 
 
 def parse_last_page(html: str) -> int:

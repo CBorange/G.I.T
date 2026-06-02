@@ -2,6 +2,7 @@ using GIT_Backend.Application.Service;
 using GIT_Backend.Application.Worker;
 using GIT_Backend.Infra;
 using GIT_Backend.Infra.Database;
+using GIT_Backend.Infra.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using StackExchange.Redis;
@@ -21,10 +22,11 @@ try
             .ReadFrom.Configuration(context.Configuration)
             .ReadFrom.Services(services));
 
-    // DB Connection
+    // Environments load
     var envLoader = new EnvironmentLoader();
     var connectionString = envLoader.LoadMainDBConnectionString();
     var redisConnectionString = envLoader.LoadRedisConnectionString();
+    var internalApiKey = envLoader.LoadInternalApiKey();
 
     builder.Services.AddDbContext<GITDBContext>(options =>
         options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
@@ -52,6 +54,12 @@ try
     }
 
     app.UseAuthorization();
+    app.UseWhen(
+        context => context.Request.Path.StartsWithSegments("/api/crawler", StringComparison.OrdinalIgnoreCase),
+        internalApiApp =>
+        {
+            internalApiApp.UseMiddleware<InternalApiAuthorizationMiddleware>(internalApiKey);
+        });
 
     app.MapControllers();
 

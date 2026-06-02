@@ -41,6 +41,13 @@ namespace GIT_Backend.Infra
             return connectionStringBuilder.ToString(includePassword: true);
         }
 
+        public string LoadInternalApiKey()
+        {
+            EnsureInitialized();
+
+            return GetRequiredValue("Internal_API_Key");
+        }
+
         private void EnsureInitialized()
         {
             if (_initialized)
