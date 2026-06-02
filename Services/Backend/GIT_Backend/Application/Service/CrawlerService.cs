@@ -1,4 +1,5 @@
 using GIT_Backend.Application.DTO;
+using GIT_Backend.Application.Worker;
 using GIT_Backend.Domain.Constants;
 using GIT_Backend.Domain.Entity;
 using GIT_Backend.Infra.Database;
@@ -6,11 +7,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GIT_Backend.Application.Service;
 
-public class CrawlerService(GITDBContext dbContext)
+public class CrawlerService
 {
+    private readonly GITDBContext _dbContext;
+    private readonly ILogger<CrawlerWorker> _logger;
+
+    public CrawlerService(ILogger<CrawlerWorker> logger, GITDBContext dbContext)
+    {
+        _logger = logger;
+        _dbContext = dbContext;
+    }
     public async Task<IReadOnlyList<SourceProviderResponse>> GetActiveProvidersAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.SourceProviders
+        return await _dbContext.SourceProviders
             .AsNoTracking()
             .Where(sourceProvider => sourceProvider.IsActive)
             .OrderBy(sourceProvider => sourceProvider.Id)
@@ -53,7 +62,7 @@ public class CrawlerService(GITDBContext dbContext)
             return new RawContentSaveResult(existingRawContentId.Value, AnalyzeJobId: null, Created: false);
         }
 
-        var crawlTarget = await dbContext.CrawlTargets
+        var crawlTarget = await _dbContext.CrawlTargets
             .AsNoTracking()
             .Where(crawlTarget => crawlTarget.Id == message.CrawlTargetId)
             .Select(crawlTarget => new
@@ -73,7 +82,7 @@ public class CrawlerService(GITDBContext dbContext)
         // AnalysisRoute 테이블에서 RawContents 발행한 CrawlTarget과 연결되는 Route가 있는지 검증한다.
         // AnalyzeJob 데이터 생성 -> AI 분석 요청과 도메인적으로 같음, Redis Event 발행과 별개로 AnalyzeJob이 생성되어 있으면 분석 예약인것이므로
         // 이 단계에서 AnalysisRoute를 Check 하는것
-        var analysisRoute = await dbContext.AnalysisRoutes
+        var analysisRoute = await _dbContext.AnalysisRoutes
             .AsNoTracking()
             .Where(route =>
                 route.IsEnabled &&
@@ -108,8 +117,6 @@ public class CrawlerService(GITDBContext dbContext)
                 $"Enabled AnalysisRoute not found. crawl_target_id={message.CrawlTargetId}");
         }
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
         var rawContent = new RawContent
         {
             Id = message.Id,
@@ -135,11 +142,18 @@ public class CrawlerService(GITDBContext dbContext)
             MaxAttemptCount = null,
         };
 
-        dbContext.RawContents.Add(rawContent);
-        dbContext.AnalyzeJobs.Add(analyzeJob);
+        try
+        {
+            _dbContext.RawContents.Add(rawContent);
+            _dbContext.AnalyzeJobs.Add(analyzeJob);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save RawContent and AnalyzeJob CrawlTargetId={CrawlTargetId}", message.CrawlTargetId);
+            throw;
+        }
 
         return new RawContentSaveResult(rawContent.Id, analyzeJob.Id, Created: true);
     }
@@ -148,7 +162,7 @@ public class CrawlerService(GITDBContext dbContext)
         CrawlerRawContentMessage message,
         CancellationToken cancellationToken)
     {
-        return await dbContext.RawContents
+        return await _dbContext.RawContents
             .Where(rawContent =>
                 rawContent.Id == message.Id ||
                 rawContent.SourceUrl == message.SourceUrl ||

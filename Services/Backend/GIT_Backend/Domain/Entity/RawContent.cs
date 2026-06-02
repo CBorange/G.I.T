@@ -7,6 +7,7 @@ public class RawContent
     public int CrawlTargetId { get; set; }
 
     public string SourceUrl { get; set; } = string.Empty;
+    public string ThumbnailUrl { get; set; } = string.Empty;
 
     public string? ContentId { get; set; }
 

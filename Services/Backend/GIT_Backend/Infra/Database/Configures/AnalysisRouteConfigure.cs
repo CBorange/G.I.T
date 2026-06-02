@@ -8,13 +8,23 @@ public class AnalysisRouteConfigure : IEntityTypeConfiguration<AnalysisRoute>
 {
     public void Configure(EntityTypeBuilder<AnalysisRoute> entity)
     {
-        entity.ToTable("analysis_route");
+        entity.ToTable("analysis_route", table =>
+        {
+            table.HasCheckConstraint(
+                "CK_analysis_route_default_route_requires_null_match",
+                "is_default = false OR (source_provider_id IS NULL AND source_category_id IS NULL)");
+        });
 
         entity.HasKey(e => e.Id);
 
         entity.HasIndex(e => new { e.SourceProviderId, e.AnalyzerProviderId })
             .IsUnique()
             .HasDatabaseName("UQ_analysis_route_source_analyzer");
+
+        entity.HasIndex(e => e.IsDefault)
+            .IsUnique()
+            .HasFilter("is_default = true")
+            .HasDatabaseName("UQ_analysis_route_default_route");
 
         entity.Property(e => e.Id)
             .UseIdentityAlwaysColumn();

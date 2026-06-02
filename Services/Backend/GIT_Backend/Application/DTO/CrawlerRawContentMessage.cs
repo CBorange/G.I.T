@@ -4,11 +4,11 @@ public sealed record CrawlerRawContentMessage(
     Guid Id,
     int CrawlTargetId,
     string SourceUrl,
-    string? ContentId,
-    string? Author,
+    string ContentId,
+    string Author,
     DateTimeOffset? PublishedAt,
     string Title,
-    string? Body,
+    string Body,
     string? RawPayloadJson,
     DateTimeOffset CrawledAt);
 

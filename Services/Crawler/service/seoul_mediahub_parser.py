@@ -75,7 +75,7 @@ def parse_article(
     if title_tag is None:
         raise ValueError(f"Article title not found. source_url={source_url}")
 
-    writer_tag = header.select_one("p.writer a")
+    writer_tag = header.select_one("p.writer a") or header.select_one("p.writer")
     published_at_tag = header.select_one("p.date span.num")
     body_root = _find_body_root(soup)
     story_tags = body_root.select("div.article div.story_area") if body_root else []

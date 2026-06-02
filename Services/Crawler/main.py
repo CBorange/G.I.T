@@ -49,14 +49,6 @@ def get_source_provider(
         f"SourceProvider not found. provider_code={provider_code}"
     )
 
-
-def run_crawler_once(crawler: BaseCrawler) -> None:
-    # 1. crawler 구현체 실행
-    crawler.run()
-
-    # 2. 결과를 backend API 또는 Redis Stream으로 전달
-
-
 def main() -> None:
     configure_logging()
     args = load_arguments()
@@ -74,7 +66,7 @@ def main() -> None:
                 provider_code=args.provider,
             )
             crawler = create_crawler(source_provider)
-            run_crawler_once(crawler)
+            crawler.run()
         except Exception as e:
             logger.error(f"Error occurred during crawler running once: {e}")
         return
@@ -87,7 +79,7 @@ def main() -> None:
 
             for source_provider in source_providers:
                 crawler = create_crawler(source_provider)
-                run_crawler_once(crawler)
+                crawler.run()
 
             logger.info("Crawler iteration completed.")
 

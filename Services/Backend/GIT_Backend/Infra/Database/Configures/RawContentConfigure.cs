@@ -27,7 +27,10 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
         entity.Property(e => e.SourceUrl)
             .HasColumnType("text")
             .IsRequired();
-        
+
+        entity.Property(e => e.ThumbnailUrl)
+            .HasColumnType("text");
+
         entity.Property(e => e.ContentId)
             .HasMaxLength(50);
 

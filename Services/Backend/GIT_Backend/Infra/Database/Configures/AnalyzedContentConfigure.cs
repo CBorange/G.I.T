@@ -8,7 +8,12 @@ public class AnalyzedContentConfigure : IEntityTypeConfiguration<AnalyzedContent
 {
     public void Configure(EntityTypeBuilder<AnalyzedContent> entity)
     {
-        entity.ToTable("analyzed_contents");
+        entity.ToTable("analyzed_contents", table =>
+        {
+            table.HasCheckConstraint(
+                "CK_analyzed_contents_confidence_range",
+                "confidence >= 0 AND confidence <= 1");
+        });
 
         entity.HasKey(e => e.Id);
 
