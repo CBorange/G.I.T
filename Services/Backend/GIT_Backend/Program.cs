@@ -33,10 +33,12 @@ try
 
     // Add Services For DI
     builder.Services.AddScoped<CrawlerService>();
+    builder.Services.AddScoped<AnalyzerService>();
 
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         ConnectionMultiplexer.Connect(redisConnectionString));
-    builder.Services.AddHostedService<CrawlerWorker>();
+    builder.Services.AddHostedService<CrawlContentsConsumer>();
+    builder.Services.AddHostedService<AnalyzeJobDispatcher>();
 
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
@@ -55,7 +57,9 @@ try
 
     app.UseAuthorization();
     app.UseWhen(
-        context => context.Request.Path.StartsWithSegments("/api/crawler", StringComparison.OrdinalIgnoreCase),
+        context =>
+            context.Request.Path.StartsWithSegments("/api/crawler", StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.StartsWithSegments("/api/analyzer", StringComparison.OrdinalIgnoreCase),
         internalApiApp =>
         {
             internalApiApp.UseMiddleware<InternalApiAuthorizationMiddleware>(internalApiKey);

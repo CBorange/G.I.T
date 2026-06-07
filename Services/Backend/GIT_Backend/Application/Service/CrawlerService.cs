@@ -10,9 +10,9 @@ namespace GIT_Backend.Application.Service;
 public class CrawlerService
 {
     private readonly GITDBContext _dbContext;
-    private readonly ILogger<CrawlerWorker> _logger;
+    private readonly ILogger<CrawlerService> _logger;
 
-    public CrawlerService(ILogger<CrawlerWorker> logger, GITDBContext dbContext)
+    public CrawlerService(ILogger<CrawlerService> logger, GITDBContext dbContext)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -52,9 +52,7 @@ public class CrawlerService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<RawContentSaveResult> SaveRawContentAsync(
-        CrawlerRawContentMessage message,
-        CancellationToken cancellationToken)
+    public async Task<RawContentSaveResult> SaveRawContentAsync(CrawlerRawContentMessage message, CancellationToken cancellationToken)
     {
         var existingRawContentId = await FindExistingRawContentIdAsync(message, cancellationToken);
         if (existingRawContentId is not null)

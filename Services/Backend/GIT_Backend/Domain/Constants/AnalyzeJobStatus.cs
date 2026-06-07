@@ -1,6 +1,5 @@
 ﻿namespace GIT_Backend.Domain.Constants
 {
-    /// </summary>
     public enum AnalyzeJobStatus : byte
     {
         /// <summary>

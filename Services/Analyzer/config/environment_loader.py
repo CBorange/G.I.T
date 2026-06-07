@@ -23,16 +23,20 @@ class AppConfig:
     redis_port: int
     redis_password: str
     redis_stream_key: str
+    redis_consumer_group: str
 
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 app_config = AppConfig(
     backend_api_base_url=require_env("BACKEND_API_BASE_URL"),
-    backend_api_timeout_sec=int(require_env("BACKEND_API_TIMEOUT_SECONDS")),
+    backend_api_timeout_sec=int(
+        os.getenv("BACKEND_API_TIMEOUT_SEC") or require_env("BACKEND_API_TIMEOUT_SECONDS")
+    ),
     internal_api_key=require_env("Internal_API_Key"),
     redis_host=require_env("Redis_Host"),
     redis_port=int(require_env("Redis_Port")),
     redis_password=require_env("Redis_Password"),
     redis_stream_key=require_env("Redis_Stream_Key"),
+    redis_consumer_group=require_env("Redis_Consumer_Group"),
 )

@@ -5,15 +5,18 @@ using StackExchange.Redis;
 
 namespace GIT_Backend.Application.Worker
 {
-    public sealed class CrawlerWorker : BackgroundService
+    /// <summary>
+    /// Crawler가 발행한 데이터 Consume, Save to DB, AnalyzeJob 발행 담당 Worker
+    /// </summary>
+    public sealed class CrawlContentsConsumer : BackgroundService
     {
         private const string StreamKey = "raw-content-events";
         private const string GroupName = "backend-raw-content-group";
         private readonly IConnectionMultiplexer _redis;
-        private readonly ILogger<CrawlerWorker> _logger;
+        private readonly ILogger<CrawlContentsConsumer> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public CrawlerWorker(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory, ILogger<CrawlerWorker> logger)
+        public CrawlContentsConsumer(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory, ILogger<CrawlContentsConsumer> logger)
         {
             _redis = redis;
             _scopeFactory = scopeFactory;

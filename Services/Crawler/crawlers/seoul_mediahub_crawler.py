@@ -19,7 +19,7 @@ from models.source_provider import CrawlTarget
 logger = logging.getLogger(__name__)
 
 SEOUL_TIMEZONE = timezone(timedelta(hours=9))
-
+DEFAULT_STREAM_MAXLEN = 10000
 
 class SeoulMediahubCrawler(BaseCrawler):
     def run(self) -> None:
@@ -137,12 +137,14 @@ class SeoulMediahubCrawler(BaseCrawler):
 
     def _publish_result(self, result: RawContentResult) -> None:
         self.redis_client.xadd(
-            app_config.raw_content_stream_key,
+            app_config.redis_stream_key,
             result.to_redis_stream_values(),
+            maxlen=DEFAULT_STREAM_MAXLEN,
+            approximate=True,
         )
         logger.info(
             "Published raw content. stream_key=%s source_url=%s title=%s",
-            app_config.raw_content_stream_key,
+            app_config.redis_stream_key,
             result.source_url,
             result.title,
         )

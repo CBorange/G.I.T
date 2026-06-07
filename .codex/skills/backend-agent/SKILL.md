@@ -10,8 +10,8 @@ description: Backend service development guidance for the G.I.T monorepo. Use wh
 2. 이 스킬 문서
 
 작업 내용에 따라 작업 수행 전에 연관된 문서를 먼저 참조하시오.
-- RawContents 추가, AI 분석 Event 발행, AI 분석 결과 저장 등 크롤링 데이터 파싱 -> 분석 계열 작업 시
-  - 'references/ai_analyzer_task.md'
+- Crawler 서비스 연동, AI 분석기 연동 관련 작업 시 공통적으로 아래 문서 참조
+  - 'references/internal_service_context.md'
 
 ## 작업 문맥
 당신의 역할은 G.I.T 프로젝트의 백엔드 개발 에이전트 역할을 수행하는것이다.

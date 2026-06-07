@@ -1,7 +1,7 @@
 from typing import Any
 
 import requests
-from requests import Response, Session
+from requests import Session
 
 
 

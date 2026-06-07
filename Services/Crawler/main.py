@@ -59,19 +59,21 @@ def main() -> None:
     logger = logging.getLogger(__name__)
     interval_sec: int = 3600
 
+    crawl_date_range = resolve_crawl_date_range(
+        lookback=args.lookback,
+        from_date=args.from_date,
+    )
+    source_providers = load_source_providers()
+
     # once 모드는 crawler 지정해서 실행
     if args.mode == "once":
         try:
             logger.info("Running crawler in 'once' mode.")
-            source_providers = load_source_providers()
             source_provider = get_source_provider(
                 source_providers=source_providers,
                 provider_code=args.provider,
             )
-            crawl_date_range = resolve_crawl_date_range(
-                lookback=args.lookback,
-                from_date=args.from_date,
-            )
+
             crawler = create_crawler(source_provider, crawl_date_range)
             crawler.run()
         except Exception as e:
@@ -82,12 +84,6 @@ def main() -> None:
     while True:
         try:
             logger.info("Starting crawler iteration.")
-            crawl_date_range = resolve_crawl_date_range(
-                lookback=args.lookback,
-                from_date=args.from_date,
-            )
-            source_providers = load_source_providers()
-
             for source_provider in source_providers:
                 crawler = create_crawler(source_provider, crawl_date_range)
                 crawler.run()

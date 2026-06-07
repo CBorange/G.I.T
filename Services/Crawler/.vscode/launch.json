@@ -15,7 +15,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/main.py",
       "console": "integratedTerminal",
-      "args": ["--mode", "once", "--provider", "seoul_mediahub", "--lookback", "1y"]
+      "args": ["--mode", "once", "--provider", "seoul_mediahub"]
     }
   ]
 }
