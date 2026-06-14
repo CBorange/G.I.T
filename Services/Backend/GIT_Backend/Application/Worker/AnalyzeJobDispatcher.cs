@@ -105,40 +105,12 @@ namespace GIT_Backend.Application.Worker
                 new("analyze_job_id", message.AnalyzeJobId.ToString()),
                 new("raw_content_id", message.RawContentId.ToString()),
                 new("analyzer_provider_id", message.AnalyzerProviderId.ToString(CultureInfo.InvariantCulture)),
-                new("analyzer_provider_code", message.AnalyzerProviderCode),
-                new("analyzer_model_name", message.AnalyzerModelName),
                 new("prompt_policy_code", message.PromptPolicyCode),
-                new("attempt_count", message.AttemptCount.ToString(CultureInfo.InvariantCulture)),
-                new("max_attempt_count", message.MaxAttemptCount.ToString(CultureInfo.InvariantCulture)),
-                new("crawl_target_id", message.CrawlTargetId.ToString(CultureInfo.InvariantCulture)),
-                new("source_url", message.SourceUrl),
                 new("title", message.Title),
-                new("crawled_at", FormatDateTimeOffset(message.CrawledAt)),
-                new("dispatched_at", FormatDateTimeOffset(dispatchedAt)),
+                new("body", message.Body),
             };
 
-            AddOptional(entries, "analyzer_endpoint_url", message.AnalyzerEndpointUrl);
-            AddOptional(entries, "analyzer_config_json", message.AnalyzerConfigJson);
-            AddOptional(entries, "content_id", message.ContentId);
-            AddOptional(entries, "author", message.Author);
-            AddOptional(entries, "published_at", message.PublishedAt is null ? null : FormatDateTimeOffset(message.PublishedAt.Value));
-            AddOptional(entries, "body", message.Body);
-            AddOptional(entries, "raw_payload_json", message.RawPayloadJson);
-
             return entries.ToArray();
-        }
-
-        private static void AddOptional(List<NameValueEntry> entries, string name, string? value)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                entries.Add(new NameValueEntry(name, value));
-            }
-        }
-
-        private static string FormatDateTimeOffset(DateTimeOffset value)
-        {
-            return value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
         }
     }
 }

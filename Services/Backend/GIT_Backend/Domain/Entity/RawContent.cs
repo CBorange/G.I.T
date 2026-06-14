@@ -17,7 +17,7 @@ public class RawContent
 
     public string Title { get; set; } = string.Empty;
 
-    public string? Body { get; set; }
+    public string Body { get; set; } = string.Empty;
 
     public string? RawPayloadJson { get; set; }
 

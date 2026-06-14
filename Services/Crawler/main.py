@@ -39,19 +39,6 @@ def load_source_providers() -> list[SourceProvider]:
         for item in data
     ]
 
-
-def get_source_provider(
-    source_providers: list[SourceProvider],
-    provider_code: str,
-) -> SourceProvider:
-    for source_provider in source_providers:
-        if source_provider.code.lower() == provider_code.lower():
-            return source_provider
-
-    raise ValueError(
-        f"SourceProvider not found. provider_code={provider_code}"
-    )
-
 def main() -> None:
     configure_logging()
     args = load_arguments()
@@ -69,10 +56,14 @@ def main() -> None:
     if args.mode == "once":
         try:
             logger.info("Running crawler in 'once' mode.")
-            source_provider = get_source_provider(
-                source_providers=source_providers,
-                provider_code=args.provider,
-            )
+            source_provider: None
+            for target in source_providers:
+                if target.code.lower() == args.provider.lower():
+                    source_provider = target
+                    break
+            if not source_provider:
+                logger.error(f"requested source provider code doesn't match from available providers: {args.provider}")
+                return
 
             crawler = create_crawler(source_provider, crawl_date_range)
             crawler.run()

@@ -3,7 +3,10 @@ from abc import ABC, abstractmethod
 from redis import Redis
 from requests import Session
 
+from model.analyze_job_dispatch_message import AnalyzeJobDispatchMessage
+from model.analyzed_content_result import AnalyzedContentResult
 from model.analyzer_provider import AnalyzerProvider
+from model.source_category import SourceCategory
 
 
 class BaseAnalyzer(ABC):
@@ -18,5 +21,9 @@ class BaseAnalyzer(ABC):
         self.redis_client = redis_client
 
     @abstractmethod
-    def run(self, message: dict[str, str]) -> None:
+    def run(
+        self,
+        messages: list[AnalyzeJobDispatchMessage],
+        source_categories: list[SourceCategory],
+    ) -> list[AnalyzedContentResult]:
         pass

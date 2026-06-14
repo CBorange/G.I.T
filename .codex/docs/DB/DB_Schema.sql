@@ -211,7 +211,7 @@ CREATE TABLE "raw_contents"
   "author"           varchar(100),
   "published_at"     timestamptz ,
   "title"            text         NOT NULL,
-  "body"             text        ,
+  "body"             text         NOT NULL,
   "raw_payload_json" jsonb       ,
   "crawled_at"       timestamptz  NOT NULL,
   "created_at"       timestamptz  NOT NULL,

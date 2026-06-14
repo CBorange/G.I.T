@@ -5,9 +5,8 @@ from helper.redis_client import create_redis_client
 from model.analyzer_provider import AnalyzerProvider
 
 ANALYZER_BY_PROVIDER_CODE: dict[str, type[BaseAnalyzer]] = {
-    "Default_Analyzer": DefaultAnalyzer,
+    "default_analyzer": DefaultAnalyzer,
 }
-
 
 def create_analyzer(analyzer_provider: AnalyzerProvider) -> BaseAnalyzer:
     analyzer_type = ANALYZER_BY_PROVIDER_CODE.get(

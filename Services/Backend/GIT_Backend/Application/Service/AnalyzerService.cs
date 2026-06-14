@@ -48,21 +48,7 @@ namespace GIT_Backend.Application.Service
                 .ToListAsync(cancellationToken);
         }
 
-        private Expression<Func<AnalyzeJob, bool>> IsDispatchableExpression()
-        {
-            var dispatchedThreshold = DateTimeOffset.UtcNow.AddSeconds(-5);
-            var pending = AnalyzeJobStatus.Pending.ToString();
-
-            var dispatched = AnalyzeJobStatus.Dispatched.ToString();
-            var failed = AnalyzeJobStatus.Failed.ToString();
-            var dispatchableStatuses = new[] { pending, dispatched, failed };
-
-            return job =>
-                job.Status == pending ||
-                (job.Status == dispatched && job.LastRunningAt < dispatchedThreshold) ||
-                (job.Status == failed && job.AttemptCount < (job.MaxAttemptCount ?? DefaultMaxAttemptCount));
-        }
-
+        #region Analyzer Job Dispatch
         public async Task<IReadOnlyList<AnalyzeJobDispatchMessage>> GetDispatchableJobsAsync(int batchSize, CancellationToken cancellationToken)
         {
             var isDispatchable = IsDispatchableExpression();
@@ -77,22 +63,9 @@ namespace GIT_Backend.Application.Service
                     job.Id,
                     job.RawContentId,
                     job.AnalyzerProviderId,
-                    job.AnalyzerProvider.Code,
-                    job.AnalyzerProvider.ModelName,
-                    job.AnalyzerProvider.EndpointUrl,
-                    job.AnalyzerProvider.ConfigJson,
                     job.PromptPolicyCode,
-                    job.AttemptCount,
-                    job.MaxAttemptCount ?? DefaultMaxAttemptCount,
-                    job.RawContent.CrawlTargetId,
-                    job.RawContent.SourceUrl,
-                    job.RawContent.ContentId,
-                    job.RawContent.Author,
-                    job.RawContent.PublishedAt,
                     job.RawContent.Title,
-                    job.RawContent.Body,
-                    job.RawContent.RawPayloadJson,
-                    job.RawContent.CrawledAt))
+                    job.RawContent.Body))
                 .ToListAsync(cancellationToken);
         }
 
@@ -117,6 +90,35 @@ namespace GIT_Backend.Application.Service
                 _logger.LogError(ex, "Failed to update dispatched analyze job. AnalyzeJobId={AnalyzeJobId}", analyzeJobId);
                 throw;
             }
+        }
+        private Expression<Func<AnalyzeJob, bool>> IsDispatchableExpression()
+        {
+            var dispatchedThreshold = DateTimeOffset.UtcNow.AddHours(-1);
+            var pending = AnalyzeJobStatus.Pending.ToString();
+
+            var dispatched = AnalyzeJobStatus.Dispatched.ToString();
+            var failed = AnalyzeJobStatus.Failed.ToString();
+            var dispatchableStatuses = new[] { pending, dispatched, failed };
+
+            return job =>
+                job.Status == pending ||
+                (job.Status == dispatched && job.LastRunningAt < dispatchedThreshold) ||
+                (job.Status == failed && job.AttemptCount < (job.MaxAttemptCount ?? DefaultMaxAttemptCount));
+        }
+        #endregion
+
+        public async Task<IReadOnlyList<SourceCategoryResponse>> GetActiveCategoriesAsync(CancellationToken cancellationToken)
+        {
+            return await _dbContext.SourceCategories
+                .AsNoTracking()
+                .Where(sourceCategory => sourceCategory.IsActive)
+                .OrderBy(sourceCategory => sourceCategory.Id)
+                .Select(sourceCategory => new SourceCategoryResponse(
+                    sourceCategory.Id,
+                    sourceCategory.Code,
+                    sourceCategory.Name,
+                    sourceCategory.Description))
+                .ToListAsync(cancellationToken);
         }
     }
 }

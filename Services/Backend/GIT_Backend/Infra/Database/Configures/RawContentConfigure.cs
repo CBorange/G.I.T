@@ -45,7 +45,8 @@ public class RawContentConfigure : IEntityTypeConfiguration<RawContent>
             .IsRequired();
 
         entity.Property(e => e.Body)
-            .HasColumnType("text");
+            .HasColumnType("text")
+            .IsRequired();
 
         entity.Property(e => e.RawPayloadJson)
             .HasColumnType("jsonb");

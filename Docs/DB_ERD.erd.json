@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -775.0588,
-    "scrollLeft": -704,
+    "scrollTop": -726.0588,
+    "scrollLeft": -295,
     "zoomLevel": 0.73,
     "show": 511,
     "database": 16,
@@ -1707,7 +1707,7 @@
         "comment": "내용",
         "dataType": "text",
         "default": "",
-        "options": 0,
+        "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 60,
@@ -1716,7 +1716,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1778684192366,
+          "updateAt": 1781019208731,
           "createAt": 1778684182229
         }
       },

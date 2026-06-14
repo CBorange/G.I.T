@@ -11,6 +11,8 @@ GIT 프로젝트는 뉴스/이슈 데이터를 Crawling, AI Analyze하여 지역
 - EventBroker: Redis Streams
 - Infra: Docker Compose
 
+백엔드의 EF Context를 DB Source Of Truth로 한다.
+
 ## 코드작업 지침
 실용적이고 클린한 아키텍쳐를 추구하되 과하게 일반화된 엔터프라이즈급 설계를 경계하여 작업하라.
 클린 코드, 클린 아키텍쳐를 기본 원칙으로 준수하라.
@@ -29,11 +31,6 @@ ex) Layer 의존성 경계를 지키고 강한 결합을 지양하라.
 
 ## Encoding Rule
 모든 소스/문서 파일은 UTF-8로만 읽고 저장한다.
-Windows PowerShell에서 파일 수정 시 `Set-Content`, `Out-File`, `>` 리다이렉션을 기본 옵션으로 사용하지 않는다.
-파일을 저장해야 하면 반드시 UTF-8 명시 옵션을 사용한다.
-
-PowerShell Command exmaple:
-Set-Content -Path <file> -Value <content> -Encoding utf8
 
 한글이 포함된 파일은 터미널 명령으로 전체 재작성하지 말고,
 가능하면 apply_patch 방식으로 필요한 라인만 수정한다.
@@ -43,7 +40,7 @@ Set-Content -Path <file> -Value <content> -Encoding utf8
 모든 Agent용 참조 문서는 .codex/ 디렉토리를 기준으로 한다. 모든 문서 참조 경로는 .codex/ 하위의 경로이다.
 다른 위치의 문서는 agent용 참조 문서가 아니다 읽지 말것.
 
-- DB Schema 구조를 변경하거나 참조해야 하는 작업
+- DB Schema 구조 변경 또는 참조필요 시
   - 작업 전 docs/DB/db_design.md 파일을 우선 참조하여 최신 DB 설계를 파악하라.
 
 ## 작업 순서

@@ -22,8 +22,10 @@ class AppConfig:
     redis_host: str
     redis_port: int
     redis_password: str
-    redis_stream_key: str
-    redis_consumer_group: str
+    redis_disaptch_stream: str
+    redis_disaptch_consumer_group: str
+    redis_analyzed_stream: str
+    openai_api_key: str
 
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
@@ -34,9 +36,11 @@ app_config = AppConfig(
         os.getenv("BACKEND_API_TIMEOUT_SEC") or require_env("BACKEND_API_TIMEOUT_SECONDS")
     ),
     internal_api_key=require_env("Internal_API_Key"),
+    openai_api_key=require_env("OpenAI_API_Key"),
     redis_host=require_env("Redis_Host"),
     redis_port=int(require_env("Redis_Port")),
     redis_password=require_env("Redis_Password"),
-    redis_stream_key=require_env("Redis_Stream_Key"),
-    redis_consumer_group=require_env("Redis_Consumer_Group"),
+    redis_disaptch_stream=require_env("Redis_Disaptch_Stream"),
+    redis_analyzed_stream=require_env("Redis_Analyzed_Stream"), 
+    redis_disaptch_consumer_group=require_env("Redis_Disaptch_Consumer_Group"),
 )

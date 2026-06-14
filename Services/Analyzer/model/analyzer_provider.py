@@ -31,23 +31,6 @@ class AnalyzerProvider:
             last_running_at=parse_datetime(data.get("lastRunningAt")),
         )
 
-    @staticmethod
-    def from_stream_values(values: dict[str, str]) -> "AnalyzerProvider":
-        code = values["analyzer_provider_code"]
-
-        return AnalyzerProvider(
-            id=int(values["analyzer_provider_id"]),
-            name=code,
-            code=code,
-            model_name=values["analyzer_model_name"],
-            endpoint_url=values.get("analyzer_endpoint_url"),
-            is_enabled=True,
-            config_json=values.get("analyzer_config_json"),
-            created_at=None,
-            updated_at=None,
-            last_running_at=None,
-        )
-
 
 def parse_datetime(value: str | None) -> datetime | None:
     if value is None or value.strip() == "":

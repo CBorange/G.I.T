@@ -18,4 +18,13 @@ public class AnalyzerController(AnalyzerService analyzerService) : ControllerBas
 
         return Ok(analyzerProviders);
     }
+
+    [HttpGet("source-categories")]
+    [ProducesResponseType(typeof(List<SourceCategoryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<SourceCategoryResponse>>> GetSourceCategories(CancellationToken cancellationToken)
+    {
+        var sourceCategories = await analyzerService.GetActiveCategoriesAsync(cancellationToken);
+
+        return Ok(sourceCategories);
+    }
 }
