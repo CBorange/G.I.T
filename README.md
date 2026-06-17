@@ -19,7 +19,9 @@
 
 ## 시스템 구조
 
-각 서비스는 독립적인 책임을 가지고 메인 백엔드를 중심으로 Redis Streams 기반 이벤트 통신을 사용합니다.
+각 서비스는 독립적인 책임을 가지고 메인 백엔드를 중심으로 Redis Streams 기반 이벤트 통신을 사용합니다.  
+Crawler와 Analyzer는 데이터 수집·분석 작업에 집중하고, Backend는 이벤트 소비, 데이터 검증, DB 저장을 담당하여  
+데이터 정합성과 처리 흐름을 중앙에서 관리합니다.
 
 ![시스템 아키텍처 도식화 이미지](./Docs/Images/서비스_아키텍쳐_v3.png)
 
@@ -39,9 +41,8 @@
 
 ## DB 설계, ERD
 
-PostgreSQL DB를 기반으로 EntityFramework Core CodeFirst를 DB 설계의 SourceOfTruth로 하여 개발하였습니다.
-EF Fluent API, Migration History를 통해 Schema 구조를 작성하였습니다.
-1차 테이블 설계를 ERD Tool을 사용해 설계했습니다.
+PostgreSQL을 기반으로 하며, Entity Framework Core Code First 방식을 DB 설계의 Source of Truth로 사용합니다.  
+주요 제약조건과 관계는 EF Fluent API 및 Migration을 통해 관리하며, 초기 테이블 구조는 ERD로 설계했습니다.
 
 ![시스템 아키텍처 도식화 이미지](./Docs/Images/DB_ERD.png)
 
@@ -67,8 +68,7 @@ flowchart LR
 
 ## 🛣️ Roadmap
 
-개발 마일스톤 목표를 구분하여 MVP로 기능 검증 -> 아키텍처 개선 및 리팩토링 -> 크롤링 데이터 및 지역 확장, 기능 추가
-방식으로 점진적으로 개발 및 고도화 하는 방식으로 진행할 계획입니다.
+현재 개발 진행상황과 이후 고도화 계획을 MVP → Refactoring → Expansion 단계로 구분하여 정리합니다.
 
 | Phase       | Task                                                         | Status |
 | ----------- | ------------------------------------------------------------ | ------ |
