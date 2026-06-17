@@ -21,7 +21,7 @@
 
 각 서비스는 독립적인 책임을 가지고 메인 백엔드를 중심으로 Redis Streams 기반 이벤트 통신을 사용합니다.
 
-![시스템 아키텍처 도식화 이미지](./Docs/Images/서비스_아키텍쳐.png)
+![시스템 아키텍처 도식화 이미지](./Docs/Images/서비스_아키텍쳐_v3.png)
 
 ## Tech Stack, 서비스별 책임 구조
 
@@ -39,10 +39,11 @@
 
 ## DB 설계, ERD
 
-DB 설계는 EF Core CodeFirst 방식으로 진행했습니다.
-Crawler와 Analyzer는 DB에 직접 접근하지 않고, Backend Worker가 이벤트를 소비하여 최종 데이터를 저장합니다.
+PostgreSQL DB를 기반으로 EntityFramework Core CodeFirst를 DB 설계의 SourceOfTruth로 하여 개발하였습니다.
+EF Fluent API, Migration History를 통해 Schema 구조를 작성하였습니다.
+1차 테이블 설계를 ERD Tool을 사용해 설계했습니다.
 
-![시스템 아키텍처 도식화 이미지](./Docs/Images/DB_ERD_v3.png)
+![시스템 아키텍처 도식화 이미지](./Docs/Images/DB_ERD.png)
 
 ---
 
@@ -59,17 +60,21 @@ flowchart LR
 | 단계 | 목표 | 설명 |
 |---|---|---|
 | 1 | Local Development | 개별 서비스 로컬 실행 및 기능 검증 |
-| 2 | Docker Compose | Backend, Worker, Crawler, Analyzer, PostgreSQL, Redis 통합 실행 |
+| 2 | Docker Compose | WSL 개발서버: Backend, Worker, Crawler, Analyzer, PostgreSQL, Redis 통합 실행 |
 | 3 | Cloud Deployment | API/Worker/Frontend/DB/Redis 클라우드 배포 |
 
 ---
 
 ## 🛣️ Roadmap
 
-세부 작업은 Issue 또는 별도 문서에서 관리하고, README에서는 큰 목표 단위만 추적합니다.
+개발 마일스톤 목표를 구분하여 MVP로 기능 검증 -> 아키텍처 개선 및 리팩토링 -> 크롤링 데이터 및 지역 확장, 기능 추가
+방식으로 점진적으로 개발 및 고도화 하는 방식으로 진행할 계획입니다.
 
-| Phase | 목표 | Status |
-|---|---|---|
-| 1️⃣ MVP | 서울 지역 대상, 1개 카테고리 크롤링 기반 End-to-End 동작 구현 | in-progress |
-| 2️⃣ Refactoring | Clean Architecture 적용 Backend 구조 개선 | - |
-| 3️⃣ Expansion | 서울 지역 N개 카테고리 확장 및 지역 기준 분석 고도화 | - |
+| Phase       | Task                                                         | Status |
+| ----------- | ------------------------------------------------------------ | ------ |
+| MVP         | 요구사항 정의, 아키텍처 설계, DB 모델링 및 AI Agent 기반 개발 환경 구축              | ✅      |
+| MVP         | 비동기 이벤트 기반 데이터 수집·분석 파이프라인 구현 (Crawler → Backend → Analyzer) | ✅     |
+| MVP         | 장애 복구, 재처리 로직 검증 및 Docker Compose 기반 운영 환경 구성                | 🚧      |
+| MVP         | Frontend 연동 및 Full-Cycle 서비스 검증                              | ⏳      |
+| Refactoring | 아키텍처 개선, 테스트 코드 작성 및 운영성 강화                                  | ⏳      |
+| Expansion   | 데이터 소스 및 분석 기능 확장                                            | ⏳      |
