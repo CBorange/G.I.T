@@ -133,7 +133,7 @@ namespace GIT_Backend.Application.Worker
                 message.Title);
         }
 
-        private static CrawlerRawContentMessage ParseMessage(Dictionary<string, string> values)
+        private CrawlerRawContentMessage ParseMessage(Dictionary<string, string> values)
         {
             return new CrawlerRawContentMessage(
                 Id: Guid.Parse(GetRequiredValue(values, "id")),
@@ -151,7 +151,7 @@ namespace GIT_Backend.Application.Worker
                     DateTimeStyles.RoundtripKind));
         }
 
-        private static string GetRequiredValue(Dictionary<string, string> values, string key)
+        private string GetRequiredValue(Dictionary<string, string> values, string key)
         {
             if (!values.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
             {
@@ -161,14 +161,14 @@ namespace GIT_Backend.Application.Worker
             return value;
         }
 
-        private static string? GetOptionalValue(Dictionary<string, string> values, string key)
+        private string? GetOptionalValue(Dictionary<string, string> values, string key)
         {
             return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
                 ? value
                 : null;
         }
 
-        private static DateTimeOffset? ParseOptionalDateTimeOffset(Dictionary<string, string> values, string key)
+        private DateTimeOffset? ParseOptionalDateTimeOffset(Dictionary<string, string> values, string key)
         {
             var value = GetOptionalValue(values, key);
             if (value is null)

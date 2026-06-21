@@ -98,7 +98,7 @@ namespace GIT_Backend.Application.Worker
             }
         }
 
-        private static NameValueEntry[] ToStreamEntries(AnalyzeJobDispatchMessage message, DateTimeOffset dispatchedAt)
+        private NameValueEntry[] ToStreamEntries(AnalyzeJobDispatchMessage message, DateTimeOffset dispatchedAt)
         {
             var entries = new List<NameValueEntry>
             {

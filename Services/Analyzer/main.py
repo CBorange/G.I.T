@@ -15,9 +15,10 @@ from model.analyzer_provider import AnalyzerProvider
 from model.source_category import SourceCategory
 from service.analyzer_factory import create_analyzer
 
-DEFAULT_BATCH_SIZE = 10
+DEFAULT_BATCH_SIZE = 3
 DEFAULT_BLOCK_MS = 5000
 DEFAULT_LOOP_INTERVAL_SEC = 30
+DEFAULT_PENDING_IDLE_MS = 1 * 60 * 1000
 
 
 def ensure_consumer_group(redis_client: Redis) -> None:
@@ -46,6 +47,25 @@ def read_analyze_job_entries(redis_client: Redis, consumer_name: str) -> list:
         return []
 
     return entries[0][1]
+
+
+def claim_pending_analyze_job_entries(
+    redis_client: Redis,
+    consumer_name: str,
+) -> list:
+    claim_result = redis_client.xautoclaim(
+        name=app_config.redis_disaptch_stream,
+        groupname=app_config.redis_disaptch_consumer_group,
+        consumername=consumer_name,
+        min_idle_time=DEFAULT_PENDING_IDLE_MS,
+        start_id="0-0",
+        count=DEFAULT_BATCH_SIZE,
+    )
+
+    if not claim_result:
+        return []
+
+    return claim_result[1]
 
 
 def load_analyzer_providers(
@@ -215,7 +235,18 @@ def main() -> None:
     # Analyzer service supports loop mode only.
     while True:
         try:
-            entries = read_analyze_job_entries(redis_client, consumer_name)
+            entries = claim_pending_analyze_job_entries(
+                redis_client,
+                consumer_name,
+            )
+            if entries:
+                logger.info(
+                    "Claimed pending analyze job events. count=%s",
+                    len(entries),
+                )
+            else:
+                entries = read_analyze_job_entries(redis_client, consumer_name)
+
             if not entries:
                 logger.info("No analyze job event found.")
                 continue

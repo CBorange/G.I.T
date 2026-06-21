@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import Counter
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -17,8 +18,8 @@ from model.source_category import SourceCategory
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_PROMPT_POLICY_CODE = "common_v1"
-MAX_ANALYSIS_BATCH_SIZE = 10
+DEFAULT_PROMPT_POLICY_CODE = "common_analyze_policy"
+MAX_ANALYSIS_BATCH_SIZE = 3
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 SYSTEM_PROMPT_PATH = PROMPT_DIR / "system.md"
 PROMPT_POLICY_PATHS = {
@@ -251,15 +252,11 @@ def build_analyzed_results(
     analysis_payload: dict[str, Any],
 ) -> list[AnalyzedContentResult]:
     analysis_results = analysis_payload["results"]
-    if len(analysis_results) != len(messages):
-        raise RuntimeError(
-            "LLM analysis result count does not match message count."
-        )
+    validate_analysis_result_identity(messages, analysis_results)
 
     result_by_job_id = {
         str(item.get("analyze_job_id")): item
         for item in analysis_results
-        if isinstance(item, dict)
     }
     source_category_ids = {
         source_category.id
@@ -278,6 +275,121 @@ def build_analyzed_results(
         )
         for message in messages
     ]
+
+
+def validate_analysis_result_identity(
+    messages: list[AnalyzeJobDispatchMessage],
+    analysis_results: list[Any],
+) -> None:
+    if len(analysis_results) != len(messages):
+        raise RuntimeError(
+            "LLM analysis result count does not match message count. "
+            f"expected_count={len(messages)} actual_count={len(analysis_results)}"
+        )
+
+    invalid_indexes = [
+        index
+        for index, item in enumerate(analysis_results)
+        if not isinstance(item, dict)
+    ]
+    if invalid_indexes:
+        raise RuntimeError(
+            "LLM analysis results must contain only JSON objects. "
+            f"invalid_indexes={invalid_indexes}"
+        )
+
+    expected_analyze_job_ids = [
+        message.analyze_job_id
+        for message in messages
+    ]
+    actual_analyze_job_ids = get_analysis_result_identity_values(
+        analysis_results,
+        "analyze_job_id",
+    )
+    validate_exact_identity_set(
+        "analyze_job_id",
+        expected_analyze_job_ids,
+        actual_analyze_job_ids,
+    )
+
+    expected_raw_content_ids = [
+        message.raw_content_id
+        for message in messages
+    ]
+    actual_raw_content_ids = get_analysis_result_identity_values(
+        analysis_results,
+        "raw_content_id",
+    )
+    validate_exact_identity_set(
+        "raw_content_id",
+        expected_raw_content_ids,
+        actual_raw_content_ids,
+    )
+
+    if actual_analyze_job_ids != expected_analyze_job_ids:
+        raise RuntimeError(
+            "LLM analysis result order does not match input message order. "
+            "field=analyze_job_id "
+            f"expected_order={expected_analyze_job_ids} "
+            f"actual_order={actual_analyze_job_ids}"
+        )
+
+
+def get_analysis_result_identity_values(
+    analysis_results: list[Any],
+    field_name: str,
+) -> list[str]:
+    return [
+        str(item.get(field_name))
+        for item in analysis_results
+    ]
+
+
+def validate_exact_identity_set(
+    field_name: str,
+    expected_values: list[str],
+    actual_values: list[str],
+) -> None:
+    expected_value_set = set(expected_values)
+    actual_value_set = set(actual_values)
+    actual_value_counts = Counter(actual_values)
+
+    missing = [
+        value
+        for value in expected_values
+        if value not in actual_value_set
+    ]
+    unknown = unique_preserving_order(
+        [
+            value
+            for value in actual_values
+            if value not in expected_value_set
+        ]
+    )
+    duplicated = [
+        value
+        for value, count in actual_value_counts.items()
+        if count > 1
+    ]
+
+    if missing or unknown or duplicated:
+        raise RuntimeError(
+            "LLM analysis result identity mismatch. "
+            f"field={field_name} missing={missing} unknown={unknown} "
+            f"duplicated={duplicated}"
+        )
+
+
+def unique_preserving_order(values: list[str]) -> list[str]:
+    seen = set()
+    result = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+
+    return result
 
 
 def build_analyzed_result(

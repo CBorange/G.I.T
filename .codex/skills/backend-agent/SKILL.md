@@ -27,6 +27,9 @@ description: Backend service development guidance for the G.I.T monorepo. Use wh
 - Entity Framework Core, CodeFirst, PostgrSQL, Fluent API 기준 설계
 - Redis Consumer/Producer Background Worker
 
+## C# 코드 작성 규칙
+- private method에 static 붙이기 금지. 명백하게 외부 호출용인 static helper class등의 경우에만 제한적으로 public static method 선언할것
+
 ## 아키텍처 규칙
 
 클린 아키텍처 방향은 준수하되 객체와 레이어를 과도하게 분리하지 않는다.  

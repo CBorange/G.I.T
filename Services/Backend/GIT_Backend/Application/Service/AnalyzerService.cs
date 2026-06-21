@@ -4,12 +4,14 @@ using GIT_Backend.Domain.Entity;
 using GIT_Backend.Infra.Database;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace GIT_Backend.Application.Service
 {
     public class AnalyzerService
     {
         private const short DefaultMaxAttemptCount = 3;
+        private const decimal MinimumAcceptedConfidence = 0.65m;
         private readonly GITDBContext _dbContext;
         private readonly ILogger<AnalyzerService> _logger;
 
@@ -104,6 +106,245 @@ namespace GIT_Backend.Application.Service
                 job.Status == pending ||
                 (job.Status == dispatched && job.LastRunningAt < dispatchedThreshold) ||
                 (job.Status == failed && job.AttemptCount < (job.MaxAttemptCount ?? DefaultMaxAttemptCount));
+        }
+        #endregion
+
+        #region Analyzed Contents Consume
+        public async Task<AnalyzedContentProcessResult> SaveAnalyzedContentAsync(
+            AnalyzedContentResultMessage message,
+            CancellationToken cancellationToken)
+        {
+            var completedAt = DateTimeOffset.UtcNow;
+
+            try
+            {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                var analyzeJob = await _dbContext.AnalyzeJobs
+                    .SingleOrDefaultAsync(job => job.Id == message.AnalyzeJobId, cancellationToken);
+
+                if (analyzeJob is null)
+                {
+                    return new AnalyzedContentProcessResult(
+                        message.AnalyzeJobId,
+                        AnalyzedContentId: null,
+                        Succeeded: false,
+                        JobUpdated: false,
+                        FailureReason: "AnalyzeJob not found.");
+                }
+
+                if (IsTerminalStatus(analyzeJob.Status))
+                {
+                    return new AnalyzedContentProcessResult(
+                        message.AnalyzeJobId,
+                        AnalyzedContentId: null,
+                        Succeeded: analyzeJob.Status == AnalyzeJobStatus.Succeeded.ToString(),
+                        JobUpdated: false,
+                        FailureReason: $"AnalyzeJob is already terminal. status={analyzeJob.Status}");
+                }
+
+                var validationError = await ValidateAnalyzedContentAsync(analyzeJob, message, cancellationToken);
+                if (validationError is not null)
+                {
+                    MarkAnalyzeJobDead(analyzeJob, validationError, completedAt);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+
+                    return new AnalyzedContentProcessResult(
+                        analyzeJob.Id,
+                        AnalyzedContentId: null,
+                        Succeeded: false,
+                        JobUpdated: true,
+                        FailureReason: validationError);
+                }
+
+                var analyzedContent = new AnalyzedContent
+                {
+                    Id = message.Id,
+                    RawContentId = message.RawContentId,
+                    AnalyzerProviderId = message.AnalyzerProviderId,
+                    AnalyzeJobId = message.AnalyzeJobId,
+                    ActualCategoryId = message.ActualCategoryId,
+                    TitleSummary = message.TitleSummary,
+                    BodySummary = message.BodySummary,
+                    KeywordJson = message.KeywordJson,
+                    LocationJson = message.LocationJson,
+                    ModelName = message.ModelName,
+                    AnalysisPayloadJson = message.AnalysisPayloadJson,
+                    AnalyzedAt = message.AnalyzedAt.ToUniversalTime(),
+                    CreatedAt = completedAt,
+                    Confidence = message.Confidence,
+                    ConfidenceReason = message.ConfidenceReason,
+                };
+
+                _dbContext.AnalyzedContents.Add(analyzedContent);
+                MarkAnalyzeJobSucceeded(analyzeJob, completedAt);
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return new AnalyzedContentProcessResult(
+                    analyzeJob.Id,
+                    analyzedContent.Id,
+                    Succeeded: true,
+                    JobUpdated: true,
+                    FailureReason: null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to save analyzed content result. AnalyzeJobId={AnalyzeJobId}, RawContentId={RawContentId}",
+                    message.AnalyzeJobId,
+                    message.RawContentId);
+                throw;
+            }
+        }
+
+        public async Task<AnalyzedContentProcessResult> MarkAnalyzeJobDeadAsync(
+            Guid analyzeJobId,
+            string lastError,
+            CancellationToken cancellationToken)
+        {
+            var completedAt = DateTimeOffset.UtcNow;
+
+            try
+            {
+                var analyzeJob = await _dbContext.AnalyzeJobs
+                    .SingleOrDefaultAsync(job => job.Id == analyzeJobId, cancellationToken);
+
+                if (analyzeJob is null)
+                {
+                    return new AnalyzedContentProcessResult(
+                        analyzeJobId,
+                        AnalyzedContentId: null,
+                        Succeeded: false,
+                        JobUpdated: false,
+                        FailureReason: "AnalyzeJob not found.");
+                }
+
+                if (IsTerminalStatus(analyzeJob.Status))
+                {
+                    return new AnalyzedContentProcessResult(
+                        analyzeJobId,
+                        AnalyzedContentId: null,
+                        Succeeded: analyzeJob.Status == AnalyzeJobStatus.Succeeded.ToString(),
+                        JobUpdated: false,
+                        FailureReason: $"AnalyzeJob is already terminal. status={analyzeJob.Status}");
+                }
+
+                MarkAnalyzeJobDead(analyzeJob, lastError, completedAt);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                return new AnalyzedContentProcessResult(
+                    analyzeJob.Id,
+                    AnalyzedContentId: null,
+                    Succeeded: false,
+                    JobUpdated: true,
+                    FailureReason: lastError);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to mark analyze job dead. AnalyzeJobId={AnalyzeJobId}", analyzeJobId);
+                throw;
+            }
+        }
+
+        private async Task<string?> ValidateAnalyzedContentAsync(
+            AnalyzeJob analyzeJob,
+            AnalyzedContentResultMessage message,
+            CancellationToken cancellationToken)
+        {
+            if (message.Confidence is < 0m or > 1m)
+            {
+                return $"Confidence is out of range. confidence={message.Confidence}";
+            }
+
+            if (message.Confidence < MinimumAcceptedConfidence)
+            {
+                return $"Confidence is below minimum accepted threshold. confidence={message.Confidence}";
+            }
+
+            if (analyzeJob.RawContentId != message.RawContentId)
+            {
+                return $"RawContentId mismatch. expected={analyzeJob.RawContentId}, actual={message.RawContentId}";
+            }
+
+            if (analyzeJob.AnalyzerProviderId != message.AnalyzerProviderId)
+            {
+                return $"AnalyzerProviderId mismatch. expected={analyzeJob.AnalyzerProviderId}, actual={message.AnalyzerProviderId}";
+            }
+
+            var actualCategoryExists = await _dbContext.SourceCategories
+                .AsNoTracking()
+                .AnyAsync(category => category.Id == message.ActualCategoryId, cancellationToken);
+
+            if (!actualCategoryExists)
+            {
+                return $"Actual category not found. actual_category_id={message.ActualCategoryId}";
+            }
+
+            var alreadySaved = await _dbContext.AnalyzedContents
+                .AsNoTracking()
+                .AnyAsync(content =>
+                    content.Id == message.Id ||
+                    content.RawContentId == message.RawContentId ||
+                    content.AnalyzeJobId == message.AnalyzeJobId,
+                    cancellationToken);
+
+            if (alreadySaved)
+            {
+                return $"Analyzed content already exists. analyze_job_id={message.AnalyzeJobId}";
+            }
+
+            return ValidateJsonPayload(message.KeywordJson, "keyword_json")
+                ?? ValidateJsonPayload(message.LocationJson, "location_json")
+                ?? ValidateJsonPayload(message.AnalysisPayloadJson, "analysis_payload_json");
+        }
+
+        private string? ValidateJsonPayload(string? payload, string fieldName)
+        {
+            if (payload is null)
+            {
+                return null;
+            }
+
+            try
+            {
+                using (JsonDocument.Parse(payload))
+                {
+                    return null;
+                }
+            }
+            catch (JsonException)
+            {
+                return $"Invalid JSON payload. field={fieldName}";
+            }
+        }
+
+        private bool IsTerminalStatus(string status)
+        {
+            return status == AnalyzeJobStatus.Succeeded.ToString()
+                || status == AnalyzeJobStatus.Dead.ToString();
+        }
+
+        private void MarkAnalyzeJobSucceeded(AnalyzeJob analyzeJob, DateTimeOffset completedAt)
+        {
+            analyzeJob.Status = AnalyzeJobStatus.Succeeded.ToString();
+            analyzeJob.AttemptCount = IncrementAttemptCount(analyzeJob.AttemptCount);
+            analyzeJob.LastError = null;
+            analyzeJob.EndedAt = completedAt;
+        }
+
+        private void MarkAnalyzeJobDead(AnalyzeJob analyzeJob, string lastError, DateTimeOffset completedAt)
+        {
+            analyzeJob.Status = AnalyzeJobStatus.Dead.ToString();
+            analyzeJob.AttemptCount = IncrementAttemptCount(analyzeJob.AttemptCount);
+            analyzeJob.LastError = lastError;
+            analyzeJob.EndedAt = completedAt;
+        }
+
+        private short IncrementAttemptCount(short attemptCount)
+        {
+            return attemptCount == short.MaxValue ? short.MaxValue : (short)(attemptCount + 1);
         }
         #endregion
 

@@ -39,6 +39,7 @@ try
         ConnectionMultiplexer.Connect(redisConnectionString));
     builder.Services.AddHostedService<CrawlContentsConsumer>();
     builder.Services.AddHostedService<AnalyzeJobDispatcher>();
+    builder.Services.AddHostedService<AnalyzedContentsConsumer>();
 
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
