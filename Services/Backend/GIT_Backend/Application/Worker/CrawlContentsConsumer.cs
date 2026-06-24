@@ -6,7 +6,7 @@ using StackExchange.Redis;
 namespace GIT_Backend.Application.Worker
 {
     /// <summary>
-    /// Crawler∞° πﬂ«‡«— µ•¿Ã≈Õ Consume, Save to DB, AnalyzeJob πﬂ«‡ ¥„¥Á Worker
+    /// CrawlerÍ∞Ä Î∞úÌñâ???∞Ïù¥??Consume, Save to DB, AnalyzeJob Î∞úÌñâ ?¥Îãπ Worker
     /// </summary>
     public sealed class CrawlContentsConsumer : BackgroundService
     {
@@ -83,7 +83,7 @@ namespace GIT_Backend.Application.Worker
             {
                 _logger.LogError(ex, "Start Redis polling failed.");
 
-                // reconnect storm πÊ¡ˆ
+                // reconnect storm Î∞©Ï?
                 await Task.Delay(5000, stoppingToken);
             }
         }
@@ -136,47 +136,20 @@ namespace GIT_Backend.Application.Worker
         private CrawlerRawContentMessage ParseMessage(Dictionary<string, string> values)
         {
             return new CrawlerRawContentMessage(
-                Id: Guid.Parse(GetRequiredValue(values, "id")),
-                CrawlTargetId: int.Parse(GetRequiredValue(values, "crawl_target_id"), CultureInfo.InvariantCulture),
-                SourceUrl: GetRequiredValue(values, "source_url"),
-                ContentId: GetRequiredValue(values, "content_id"),
-                Author: GetRequiredValue(values, "author"),
-                PublishedAt: ParseOptionalDateTimeOffset(values, "published_at"),
-                Title: GetRequiredValue(values, "title"),
-                Body: GetRequiredValue(values, "body"),
-                RawPayloadJson: GetOptionalValue(values, "raw_payload_json"),
+                Id: Guid.Parse(values.GetRequiredField("id")),
+                CrawlTargetId: int.Parse(values.GetRequiredField("crawl_target_id"), CultureInfo.InvariantCulture),
+                SourceUrl: values.GetRequiredField("source_url"),
+                ContentId: values.GetRequiredField("content_id"),
+                Author: values.GetRequiredField("author"),
+                PublishedAt: values.GetOptionalDateTimeOffsetField("published_at"),
+                Title: values.GetRequiredField("title"),
+                Body: values.GetRequiredField("body"),
+                RawPayloadJson: values.GetOptionalField("raw_payload_json"),
                 CrawledAt: DateTimeOffset.Parse(
-                    GetRequiredValue(values, "crawled_at"),
+                    values.GetRequiredField("crawled_at"),
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.RoundtripKind));
         }
 
-        private string GetRequiredValue(Dictionary<string, string> values, string key)
-        {
-            if (!values.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-            {
-                throw new InvalidOperationException($"Required Redis stream field is missing. field={key}");
-            }
-
-            return value;
-        }
-
-        private string? GetOptionalValue(Dictionary<string, string> values, string key)
-        {
-            return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
-                ? value
-                : null;
-        }
-
-        private DateTimeOffset? ParseOptionalDateTimeOffset(Dictionary<string, string> values, string key)
-        {
-            var value = GetOptionalValue(values, key);
-            if (value is null)
-            {
-                return null;
-            }
-
-            return DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-        }
     }
 }

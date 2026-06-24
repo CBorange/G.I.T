@@ -1,8 +1,10 @@
 using GIT_Backend.Application.Service;
 using GIT_Backend.Application.Worker;
+using GIT_Backend.Controllers;
 using GIT_Backend.Infra;
 using GIT_Backend.Infra.Database;
 using GIT_Backend.Infra.Middleware;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using StackExchange.Redis;
@@ -42,10 +44,14 @@ try
     builder.Services.AddHostedService<AnalyzedContentsConsumer>();
 
     builder.Services.AddControllers();
+
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
-
+    
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
@@ -66,6 +72,7 @@ try
             internalApiApp.UseMiddleware<InternalApiAuthorizationMiddleware>(internalApiKey);
         });
 
+    app.UseExceptionHandler();
     app.MapControllers();
 
     app.Run();

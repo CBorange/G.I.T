@@ -182,40 +182,23 @@ namespace GIT_Backend.Application.Worker
         private AnalyzedContentResultMessage ParseMessage(Dictionary<string, string> values)
         {
             return new AnalyzedContentResultMessage(
-                Id: Guid.Parse(GetRequiredValue(values, "id")),
-                RawContentId: Guid.Parse(GetRequiredValue(values, "raw_content_id")),
-                AnalyzerProviderId: short.Parse(GetRequiredValue(values, "analyzer_provider_id"), CultureInfo.InvariantCulture),
-                AnalyzeJobId: Guid.Parse(GetRequiredValue(values, "analyze_job_id")),
-                ActualCategoryId: short.Parse(GetRequiredValue(values, "actual_category_id"), CultureInfo.InvariantCulture),
-                TitleSummary: GetRequiredValue(values, "title_summary"),
-                BodySummary: GetRequiredValue(values, "body_summary"),
-                KeywordJson: GetOptionalValue(values, "keyword_json"),
-                LocationJson: GetOptionalValue(values, "location_json"),
-                ModelName: GetRequiredValue(values, "model_name"),
-                AnalysisPayloadJson: GetOptionalValue(values, "analysis_payload_json"),
+                Id: Guid.Parse(values.GetRequiredField("id")),
+                RawContentId: Guid.Parse(values.GetRequiredField("raw_content_id")),
+                AnalyzerProviderId: short.Parse(values.GetRequiredField("analyzer_provider_id"), CultureInfo.InvariantCulture),
+                AnalyzeJobId: Guid.Parse(values.GetRequiredField("analyze_job_id")),
+                ActualCategoryId: short.Parse(values.GetRequiredField("actual_category_id"), CultureInfo.InvariantCulture),
+                TitleSummary: values.GetRequiredField("title_summary"),
+                BodySummary: values.GetRequiredField("body_summary"),
+                KeywordJson: values.GetOptionalField("keyword_json"),
+                LocationJson: values.GetOptionalField("location_json"),
+                ModelName: values.GetRequiredField("model_name"),
+                AnalysisPayloadJson: values.GetOptionalField("analysis_payload_json"),
                 AnalyzedAt: DateTimeOffset.Parse(
-                    GetRequiredValue(values, "analyzed_at"),
+                    values.GetRequiredField("analyzed_at"),
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
-                Confidence: decimal.Parse(GetRequiredValue(values, "confidence"), CultureInfo.InvariantCulture),
-                ConfidenceReason: GetRequiredValue(values, "confidence_reason"));
-        }
-
-        private string GetRequiredValue(Dictionary<string, string> values, string key)
-        {
-            if (!values.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-            {
-                throw new InvalidOperationException($"Required Redis stream field is missing. field={key}");
-            }
-
-            return value;
-        }
-
-        private string? GetOptionalValue(Dictionary<string, string> values, string key)
-        {
-            return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
-                ? value
-                : null;
+                Confidence: decimal.Parse(values.GetRequiredField("confidence"), CultureInfo.InvariantCulture),
+                ConfidenceReason: values.GetRequiredField("confidence_reason"));
         }
     }
 }
