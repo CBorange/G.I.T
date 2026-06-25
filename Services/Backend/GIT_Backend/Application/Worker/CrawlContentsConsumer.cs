@@ -1,13 +1,10 @@
-using System.Globalization;
+﻿using System.Globalization;
 using GIT_Backend.Application.DTO;
 using GIT_Backend.Application.Service;
 using StackExchange.Redis;
 
 namespace GIT_Backend.Application.Worker
 {
-    /// <summary>
-    /// Crawler가 발행???�이??Consume, Save to DB, AnalyzeJob 발행 ?�당 Worker
-    /// </summary>
     public sealed class CrawlContentsConsumer : BackgroundService
     {
         private const string StreamKey = "raw-content-events";
@@ -15,6 +12,10 @@ namespace GIT_Backend.Application.Worker
         private readonly IConnectionMultiplexer _redis;
         private readonly ILogger<CrawlContentsConsumer> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
+
+        private const int BatchSize = 10;
+        private const long ClaimMinIdleTimeMs = 1 * 60 * 1000;
+        private const string ClaimStartId = "0-0";
 
         public CrawlContentsConsumer(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory, ILogger<CrawlContentsConsumer> logger)
         {
@@ -43,12 +44,22 @@ namespace GIT_Backend.Application.Worker
                 {
                     try
                     {
-                        var entries = await db.StreamReadGroupAsync(
-                            StreamKey,
-                            GroupName,
-                            consumerName,
-                            ">",
-                            count: 10);
+                        var entries = await ClaimPendingEntriesAsync(db, consumerName);
+                        if (entries.Length > 0)
+                        {
+                            _logger.LogInformation(
+                                "Claimed pending raw content events. Count={Count}",
+                                entries.Length);
+                        }
+                        else
+                        {
+                            entries = await db.StreamReadGroupAsync(
+                                StreamKey,
+                                GroupName,
+                                consumerName,
+                                ">",
+                                count: BatchSize);
+                        }
 
                         if (entries.Length == 0)
                         {
@@ -83,7 +94,7 @@ namespace GIT_Backend.Application.Worker
             {
                 _logger.LogError(ex, "Start Redis polling failed.");
 
-                // reconnect storm 방�?
+                // prevent reconnect storm
                 await Task.Delay(5000, stoppingToken);
             }
         }
@@ -102,6 +113,24 @@ namespace GIT_Backend.Application.Worker
             {
                 _logger.LogInformation("Redis stream consumer group already exists. GroupName={GroupName}", GroupName);
             }
+        }
+
+        private async Task<StreamEntry[]> ClaimPendingEntriesAsync(IDatabase db, string consumerName)
+        {
+            var claimResult = await db.StreamAutoClaimAsync(
+                StreamKey,
+                GroupName,
+                consumerName,
+                ClaimMinIdleTimeMs,
+                ClaimStartId,
+                BatchSize);
+
+            if (claimResult.IsNull)
+            {
+                return [];
+            }
+
+            return claimResult.ClaimedEntries;
         }
 
         private async Task ProcessAsync(CrawlerService crawlerService, StreamEntry entry, CancellationToken cancellationToken)

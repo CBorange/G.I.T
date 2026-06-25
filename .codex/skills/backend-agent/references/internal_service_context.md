@@ -14,7 +14,7 @@
   2. AnalyzeJob Dispatcher: AnalyzeJob 테이블에서 Pending 상태의 Task Redis Stream에 이벤트 발행. (AI 분석기 실행 요청에 해당)
   3. AnalyzedContents Consumer: AI 분석기 서비스가 발행한 분석된 데이터 Consume. Validation 및 Save. AnalyzeJob Done or failed 처리
 
-위 와 같이 REST API 연동을 자제하고(최초 서비스 Boot용 데이터 요청 제외) Event Broker를 통해 작업한 데이터를 백엔드로 전송하는 구조로 동작한다.
+위 와 같이 최초 서비스 Boot용 데이터 요청 제외한 REST API 연동을 자제하고 Redis Stream을 통한 Consumer/Publisher 패턴을 기반으로 데이터를 송수신 하는 구조로 동작한다.
 Analyzer Service는 백엔드가 정제한 요청만 받아서 처리한다. 자체적으로 AnalyzeJob 상태를 알지 못하고 요청하는 데이터만 처리한다.
 
 ## analyze_job status값 상태 전이표

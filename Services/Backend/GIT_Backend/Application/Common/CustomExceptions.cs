@@ -9,14 +9,16 @@
 
     public sealed class NotFoundException : Exception
     {
-        public NotFoundException(string resourceName, object key)
-            : base($"{resourceName} was not found. key={key}")
+        public NotFoundException(string resourceName, object key, string? additionalMsg = null)
+            : base($"{resourceName} was not found. key={key}\nAdditional Message={additionalMsg ?? string.Empty}")
         {
             ResourceName = resourceName;
             Key = key;
+            AdditionalMsg = additionalMsg;
         }
 
         public string ResourceName { get; }
         public object Key { get; }
+        public string? AdditionalMsg { get; }
     }
 }

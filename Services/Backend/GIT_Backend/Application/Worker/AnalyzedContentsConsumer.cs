@@ -1,4 +1,4 @@
-using GIT_Backend.Application.DTO;
+﻿using GIT_Backend.Application.DTO;
 using GIT_Backend.Application.Service;
 using GIT_Backend.Domain.Entity;
 using StackExchange.Redis;
@@ -17,6 +17,10 @@ namespace GIT_Backend.Application.Worker
         private readonly IConnectionMultiplexer _redis;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<AnalyzedContentsConsumer> _logger;
+
+        private const int BatchSize = 10;
+        private const long ClaimMinIdleTimeMs = 1 * 60 * 1000;
+        private const string ClaimStartId = "0-0";
 
         public AnalyzedContentsConsumer(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory, ILogger<AnalyzedContentsConsumer> logger)
         {
@@ -45,12 +49,22 @@ namespace GIT_Backend.Application.Worker
                 {
                     try
                     {
-                        var entries = await db.StreamReadGroupAsync(
-                            StreamKey,
-                            GroupName,
-                            consumerName,
-                            ">",
-                            count: 10);
+                        var entries = await ClaimPendingEntriesAsync(db, consumerName);
+                        if (entries.Length > 0)
+                        {
+                            _logger.LogInformation(
+                                "Claimed pending analyzed result events. Count={Count}",
+                                entries.Length);
+                        }
+                        else
+                        {
+                            entries = await db.StreamReadGroupAsync(
+                                StreamKey,
+                                GroupName,
+                                consumerName,
+                                ">",
+                                count: BatchSize);
+                        }
 
                         if (entries.Length == 0)
                         {
@@ -104,6 +118,24 @@ namespace GIT_Backend.Application.Worker
             {
                 _logger.LogInformation("Analyzed result Redis stream consumer group already exists. GroupName={GroupName}", GroupName);
             }
+        }
+
+        private async Task<StreamEntry[]> ClaimPendingEntriesAsync(IDatabase db, string consumerName)
+        {
+            var claimResult = await db.StreamAutoClaimAsync(
+                StreamKey,
+                GroupName,
+                consumerName,
+                ClaimMinIdleTimeMs,
+                ClaimStartId,
+                BatchSize);
+
+            if (claimResult.IsNull)
+            {
+                return [];
+            }
+
+            return claimResult.ClaimedEntries;
         }
 
         private async Task ProcessAsync(AnalyzerService analyzerService, StreamEntry entry, CancellationToken cancellationToken)
